@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es6",
+    "sourceMap": true,
+    "pretty": true,
+    "strict": false,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "outDir": "dist",
+    "typeRoots": [
+      "node_modules/@types"
+    ]
+  },
+  "include": [
+    "./Commands/**/*.ts",
+    "./EventHandlers/**/*.ts",
+    "./Handlers/**/*.ts",
+    "./Models/**/*.ts",
+    "./Util/**/*.ts",
+    "./*.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "Assets"
+  ]
+}
