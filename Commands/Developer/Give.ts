@@ -4,7 +4,7 @@ import User from "../../Models/User/User";
 import {guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 
-const ownerRole = guild().roles.cache.find(r => r.name === 'Owner');
+const ownerRole = guild().roles.cache.find(r => (r.name === 'Owner' || r.name === 'Admin'));
 
 const permissions    = {};
 permissions[guildId] = [
