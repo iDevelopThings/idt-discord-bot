@@ -95,7 +95,7 @@ export default class Leaderboard extends SlashCommand {
 				context.font               = '400 25px sans-serif';
 				const measurementsUsername = context.measureText(username);
 
-				const balance             = formatMoney(user.balances.balance);
+				const balance             = formatMoney(user.balances[type]);
 				context.font              = '700 22px sans-serif';
 				const measurementsBalance = context.measureText(balance);
 
