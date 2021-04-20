@@ -10,7 +10,6 @@ import {GatewayServer, SlashCreator} from "slash-create";
 import BaseEventHandler from "./EventHandlers/BaseEventHandler";
 import {database} from "./Models/ModelHelper";
 import {guild, guildId} from "./Util/Bot";
-import {BotSettings} from "./Util/Settings";
 
 const client  = new Discord.Client();
 const creator = new SlashCreator({
@@ -62,8 +61,6 @@ function loadDiscordEventHandlers() {
 }
 
 async function boot() {
-	await BotSettings.init();
-
 	loadDiscordEventHandlers();
 	await database.connect();
 

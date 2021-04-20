@@ -1,13 +1,10 @@
-import {Log} from "@envuso/common";
-import {Buffer} from "buffer";
-import {MessageAttachment, MessageEmbed, TextChannel, Util} from "discord.js";
-import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext, {MessageOptions} from "slash-create/lib/context";
+import {TextChannel, Util} from "discord.js";
+import { SlashCommand} from "slash-create";
+import CommandContext from "slash-create/lib/context";
 import Meme from "../../Handlers/Meme";
-import {collection} from "../../Models/ModelHelper";
+import MemeModel from "../../Models/MemeModel";
 import {guild, guildId} from "../../Util/Bot";
-import {createDuration} from "../../Util/Date";
-import {BotSettings} from "../../Util/Settings";
+
 
 
 export default class SendMeme extends SlashCommand {
@@ -27,24 +24,17 @@ export default class SendMeme extends SlashCommand {
 
 		const channel      = guild().channels.cache.get(ctx.channelID);
 		const memesChannel = guild().channels.cache.find(c => c.name === 'memes');
-		//		const nsfwChannel  = guild().channels.cache.find(c => c.name === 'nsfw');
 
-		if (!channel.equals(memesChannel) /*&& !channel.equals(nsfwChannel)*/) {
+		if (!channel.equals(memesChannel)) {
 			return `You can only use this command in the ${memesChannel.toString()} channel.`;
 		}
 
 		const meme = await Meme.getMeme(false);
 
-		const recent = await BotSettings.get<string[]>('recentMemes');
-
-		if (recent?.includes(meme.postLink)) {
-			Log.warn('PREVENTED A DUPLICATE OF ' + meme.url);
+		if(await MemeModel.exists(meme.url)){
 			await meme.regenerate();
 		} else {
-			const current = recent || [];
-			current.push(meme.postLink);
-
-			await BotSettings.set('recentMemes', current, createDuration(5, 'minutes').as('milliseconds'));
+			await MemeModel.store(meme);
 		}
 
 		await ctx.send('Your meme is coming good sir');

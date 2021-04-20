@@ -1,3 +1,4 @@
+import {Obj} from "@envuso/common";
 import axios from "axios";
 
 export class MemeResult {
@@ -24,6 +25,10 @@ export class MemeResult {
 		const meme = await Meme.getMeme();
 
 		Object.assign(this, meme);
+	}
+
+	forInsert() {
+		return Object.assign({}, this);
 	}
 }
 
