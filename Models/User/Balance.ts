@@ -54,6 +54,14 @@ export default class Balance {
 	}
 
 	/**
+	 * If the user basically has no money/investment, they'll get a base of $50s
+	 * @returns {boolean}
+	 */
+	canUseBaseIncome() {
+		return numbro(this.user.balances.invested).value() < 50 || numbro(this.user.balances.balance).value() < 50;
+	}
+
+	/**
 	 * Get the income that can be received from the invested balance
 	 *
 	 * @param {boolean} formatted

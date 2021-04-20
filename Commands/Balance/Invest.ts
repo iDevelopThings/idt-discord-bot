@@ -139,14 +139,18 @@ export default class Invest extends SlashCommand {
 			return `You cannot claim for another ${user.cooldownManager().timeLeft('claim', true)}.`;
 		}
 
-		const income = String(user.balanceManager().income());
+		let income = user.balanceManager().income();
 
-		user.balanceManager().addToBalance(income);
+		if(user.balanceManager().canUseBaseIncome()){
+			income = 50;
+		}
+
+		user.balanceManager().addToBalance(String(income));
 		await user.save();
 
 		await user.cooldownManager().setUsed('claim');
 
-		return `You claimed ${formatMoney(income)} from your investments.`;
+		return `You claimed ${formatMoney(income, true)} from your investments.`;
 	}
 
 	private async withdraw(ctx: CommandContext, user: UserInstance) {
