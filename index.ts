@@ -66,6 +66,11 @@ async function boot() {
 
 	await client.login(process.env.BOT_TOKEN);
 
+	client.on('error', error => {
+		Log.error('Error from discord.js: ' + error.toString());
+		console.trace(error);
+	});
+
 	await guild().roles.fetch();
 
 	const gateway = new GatewayServer((handler) => {
@@ -81,7 +86,7 @@ async function boot() {
 	await creator.syncCommandsIn(guildId, true);
 	await creator.syncCommandPermissions();
 
-//	ActivityEndedCron.start();
+	//	ActivityEndedCron.start();
 }
 
 boot().then(() => Log.info('Le bot is running'));
