@@ -62,12 +62,22 @@ export default class Leaderboard extends SlashCommand {
 		context.textAlign = 'center';
 		context.fillText(typeTitle + ' Leaderboard', canvas.width / 2, 60);
 
+		let sortBy = null;
+		switch(type){
+			case "balance":
+				sortBy = {'balances.balance' : -1};
+				break;
+			case "invested":
+				sortBy = {'balances.invested' : -1};
+				break;
+		}
+
 		const users = await User.collection().find({
 			username : {$not : {$eq : 'iDevelopBot'}}
 		}, {
 			collation : {numericOrdering : true, locale : "en_US"},
-			sort      : (type === 'balance' ? {'balances.balance' : -1,} : {'balances.invested' : -1,}),
-			limit     : 5
+			sort      : sortBy,
+			limit     : 6
 		}).toArray();
 
 		let balanceY = 100;

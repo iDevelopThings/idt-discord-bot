@@ -60,11 +60,10 @@ export default class Balance extends SlashCommand {
 
 	async run(ctx: CommandContext) {
 
-
 		if (ctx.subcommands.includes('get')) {
 			const user = await User.get(ctx.user.id);
 
-			await this.handleBalanceOutput(ctx, user);
+			return await this.handleBalanceOutput(ctx, user);
 		}
 
 		if (ctx.subcommands.includes('user')) {
@@ -73,8 +72,9 @@ export default class Balance extends SlashCommand {
 
 			const user = await User.get(userObj.user);
 
-			await this.handleBalanceOutput(ctx, user);
+			return await this.handleBalanceOutput(ctx, user);
 		}
+
 		if (ctx.subcommands.includes('gift')) {
 			const options = ctx.options.gift as { user: string; amount: string; };
 
@@ -84,6 +84,8 @@ export default class Balance extends SlashCommand {
 			return await this.handleGiftBalance(ctx, options.amount, currentUser, otherUser);
 		}
 
+
+		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get"
 	}
 
 	private async handleBalanceOutput(ctx: CommandContext, user: UserInstance) {

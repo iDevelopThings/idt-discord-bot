@@ -114,7 +114,7 @@ export default class Invest extends SlashCommand {
 		}
 
 		const valid = isValidNumber(amount);
-		if(valid !== InvalidNumberResponse.IS_VALID){
+		if (valid !== InvalidNumberResponse.IS_VALID) {
 			return valid;
 		}
 
@@ -122,7 +122,7 @@ export default class Invest extends SlashCommand {
 			return 'You dont have enough money in your balance.';
 		}
 
-		if(numbro(amount).value() > numbro(user.statistics.balance.mostInvested).value()){
+		if (numbro(amount).value() > numbro(user.statistics.balance.mostInvested).value()) {
 			user.statistics.balance.mostInvested = amount;
 		}
 
@@ -170,7 +170,7 @@ export default class Invest extends SlashCommand {
 
 
 		const valid = isValidNumber(String(amount));
-		if(valid !== InvalidNumberResponse.IS_VALID){
+		if (valid !== InvalidNumberResponse.IS_VALID) {
 			return valid;
 		}
 
@@ -184,7 +184,8 @@ export default class Invest extends SlashCommand {
 			return `You are still on cooldown, try again in ${user.cooldownManager().timeLeft('withdrawInvestment', true)}`;
 		}
 
-		await ctx.send([
+		await ctx.send(
+			[
 				`Are you sure you want to withdraw?`,
 				`If you pull out now, you will lose ${formatMoney(loss)} due to fluctuations in the market.`,
 				`If you decline, you will need to wait 30 minutes before you can withdraw again.`
@@ -215,7 +216,7 @@ export default class Invest extends SlashCommand {
 
 		const withdrawAmount = numbro(amount).subtract(loss).value().toString();
 
-		if(loss > numbro(user.statistics.balance.mostLostToTaxes).value()){
+		if (loss > numbro(user.statistics.balance.mostLostToTaxes).value()) {
 			user.statistics.balance.mostLostToTaxes = String(loss);
 		}
 

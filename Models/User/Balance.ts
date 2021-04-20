@@ -61,7 +61,7 @@ export default class Balance {
 	 */
 	income(formatted = false) {
 		const invested       = numbro(this.user.balances.invested).value();
-		const investedAmount = invested === 0 ? 50 : invested;
+		const investedAmount = invested < 50 ? 50 : invested;
 
 		const returns = Investment.returnsFor(numbro(investedAmount).value());
 
