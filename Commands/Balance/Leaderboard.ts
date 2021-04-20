@@ -63,7 +63,7 @@ export default class Leaderboard extends SlashCommand {
 		context.fillText(typeTitle + ' Leaderboard', canvas.width / 2, 60);
 
 		let sortBy = null;
-		switch(type){
+		switch (type) {
 			case "balance":
 				sortBy = {'balances.balance' : -1};
 				break;
@@ -87,9 +87,15 @@ export default class Leaderboard extends SlashCommand {
 			for (let usersKey in users) {
 
 				const user: IUser = users[usersKey];
-				const discordUser = await guild().members.fetch({
-					user : user.id
-				});
+				let discordUser;
+				try {
+					discordUser = await guild().members.fetch({
+						user : user.id
+					});
+				} catch (error) {
+					console.error(error);
+					continue;
+				}
 
 				const username             = `${user.displayName}`;
 				context.font               = '400 25px sans-serif';
