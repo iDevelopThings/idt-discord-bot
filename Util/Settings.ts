@@ -1,7 +1,5 @@
 import {Log} from "@envuso/common";
 import Keyv from "keyv";
-import {database} from "../Models/ModelHelper";
-const KeyvMongo = require('@keyv/mongo');
 
 
 type IBotSettings = {
@@ -14,9 +12,7 @@ type SettingKey = keyof IBotSettings;
 let cache = null;
 
 async function init() {
-	cache = new Keyv({
-		store : new KeyvMongo({db : database})
-	});
+	cache = new Keyv(process.env.DB_URL);
 
 	cache.on('error', err => {
 		Log.error('Error with keyv settings');

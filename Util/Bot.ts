@@ -32,8 +32,8 @@ export const getGamblingWebhook = async () => {
 	}
 
 
-	await BotSettings.set('gamblingWebhookId', webhook.id);
-	await BotSettings.set('gamblingWebhookToken', webhook.token);
+//	await BotSettings.set('gamblingWebhookId', webhook.id);
+//	await BotSettings.set('gamblingWebhookToken', webhook.token);
 
 
 	return await client.fetchWebhook(webhook.id, webhook.token);
