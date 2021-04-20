@@ -1,6 +1,7 @@
 import {GuildMember, MessageReaction, TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
+import {GamblingColor} from "../../Handlers/Gambling/Gambling";
 import User from "../../Models/User/User";
 import {UserInstance} from "../../Models/User/UserInstance";
 import {guild, guildId} from "../../Util/Bot";
@@ -20,7 +21,7 @@ export default class Invest extends SlashCommand {
 			description    : 'Manage your investment',
 			options        : [
 				{
-					name        : 'add',
+					name        : 'add_amount',
 					description : 'Add money from your balance, to your investment.',
 					type        : CommandOptionType.SUB_COMMAND,
 					options     : [
@@ -28,6 +29,26 @@ export default class Invest extends SlashCommand {
 							name        : 'amount',
 							description : 'The amount to add',
 							required    : true,
+							type        : CommandOptionType.STRING
+						}
+					]
+				},
+				{
+					name        : 'add_percent',
+					description : 'Add money from your balance, to your investment using a percent instead.',
+					type        : CommandOptionType.SUB_COMMAND,
+					options     : [
+						{
+							name        : 'amount',
+							description : 'The amount to add',
+							required    : true,
+							choices : [
+								{name : '100%', value : '100%'},
+								{name : '75%', value : '75%'},
+								{name : '50%', value : '50%'},
+								{name : '25%', value : '25%'},
+								{name : '10%', value : '10%'},
+							],
 							type        : CommandOptionType.STRING
 						}
 					]
@@ -86,7 +107,7 @@ export default class Invest extends SlashCommand {
 	async run(ctx: CommandContext) {
 		const user = await User.get(ctx.user.id);
 
-		if (ctx.subcommands.includes('add')) {
+		if (ctx.subcommands.includes('add_percent') || ctx.subcommands.includes('add_amount')) {
 			return await this.addToInvestment(ctx, user);
 		}
 
@@ -101,16 +122,13 @@ export default class Invest extends SlashCommand {
 	}
 
 	async addToInvestment(ctx: CommandContext, user: UserInstance) {
-		const addInformation = ctx.options.add as { amount: string };
 
-		let amount = addInformation.amount.toLowerCase();
-		switch (amount) {
-			case "all":
-				amount = user.balances.balance;
-				break;
-			case "half":
-				amount = numbro(user.balances.balance).divide(2).value().toString();
-				break;
+		const isPercent = !!ctx.options?.add_percent;
+		const options: any    = ctx.options[isPercent ? 'add_percent' : 'add_amount'];
+		let amount: string       = String(options.amount);
+
+		if (isPercent) {
+			amount = percentOf(user.balances.balance, amount);
 		}
 
 		const valid = isValidNumber(amount);
