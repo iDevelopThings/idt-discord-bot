@@ -14,7 +14,7 @@ let cache = null;
 async function init() {
 	cache = new Keyv({
 		adapter   : "mongodb",
-		uri       : process.env.DB_URL + '/' + process.env.DB_NAME,
+		uri       : process.env.DB_URL,// + '/' + process.env.DB_NAME,
 		namespace : 'bot_settings'
 	});
 
