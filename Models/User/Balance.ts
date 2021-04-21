@@ -68,8 +68,8 @@ export default class Balance {
 	 * @returns {string | number}
 	 */
 	income(formatted = false) {
-		const invested = numbro(this.user.balances.invested).add(50).value();
-		const returns  = Investment.returnsFor(invested);
+		const invested = numbro(this.user.balances.invested).value();
+		const returns  = Investment.returnsFor(invested) + 50;
 
 		return formatted ? formatMoney(returns) : returns;
 	}
