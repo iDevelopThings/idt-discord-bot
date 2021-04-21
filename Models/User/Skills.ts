@@ -94,7 +94,7 @@ export default class Skills {
 		if (newLevel > originalLevel && this.user.preference('botDmMessages') && !member.user.bot) {
 			try {
 				const dm = await member.createDM();
-				await dm.send(`You have leveled up ${AvailableSkills[skill].title}. You are now level ${newLevel}`);
+				await dm.send(`You have leveled up ${AvailableSkills[skill].title}. You are now level ${newLevel}\n**You can disable these messages with the command /preferences settings**`);
 			} catch (error) {
 				Log.error('Cannot dm user: ' + member.displayName + ' from add xp method. ' + error.toString());
 			}
