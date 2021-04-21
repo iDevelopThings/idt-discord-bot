@@ -3,22 +3,7 @@ import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
 import {guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
-
-const ownerRole = guild().roles.cache.find(r => (r.name === 'Owner' || r.name === 'Admin' || r.name === 'VIP IN THIS BITCH'));
-
-const permissions    = {};
-permissions[guildId] = [
-	{
-		id         : ownerRole.id,
-		type       : 1,
-		permission : true,
-	},
-	//	{
-	//		id         : beta.id,
-	//		type       : 1,
-	//		permission : true,
-	//	}
-];
+import {adminPermissionsForCommand, isAdmin} from "../../Util/Role";
 
 export default class Give extends SlashCommand {
 
@@ -29,7 +14,7 @@ export default class Give extends SlashCommand {
 			name              : 'give',
 			description       : 'Admin give command',
 			defaultPermission : true,
-			permissions       : permissions,
+			permissions       : adminPermissionsForCommand(),
 			options           : [
 				{
 					name        : 'balance',
@@ -50,7 +35,6 @@ export default class Give extends SlashCommand {
 						}
 					]
 				},
-
 			]
 		});
 		this.filePath = __filename;
@@ -58,6 +42,10 @@ export default class Give extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
+
+		if(!isAdmin(ctx.member)){
+			return "You cannot use this command";
+		}
 
 		if (ctx.subcommands.includes('balance')) {
 			const options = ctx.options.balance as { user: string; amount: string; };
