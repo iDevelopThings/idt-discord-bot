@@ -13,7 +13,7 @@ export default class Give extends SlashCommand {
 			guildIDs          : guildId,
 			name              : 'give',
 			description       : 'Admin give command',
-			defaultPermission : true,
+			defaultPermission : false,
 			permissions       : adminPermissionsForCommand(),
 			options           : [
 				{
