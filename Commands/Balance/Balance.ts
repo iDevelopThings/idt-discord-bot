@@ -52,6 +52,19 @@ export default class Balance extends SlashCommand {
 						}
 					]
 				},
+				{
+					name        : 'history',
+					description : 'See the balance change history for yourself or another user',
+					type        : CommandOptionType.SUB_COMMAND,
+					options     : [
+						{
+							name        : 'user',
+							description : 'If you want to see another users history ',
+							required    : false,
+							type        : CommandOptionType.USER,
+						}
+					]
+				},
 			]
 		});
 		this.filePath = __filename;
@@ -82,6 +95,12 @@ export default class Balance extends SlashCommand {
 			const currentUser = await User.get(ctx.user.id);
 
 			return await this.handleGiftBalance(ctx, options.amount, currentUser, otherUser);
+		}
+
+		if (ctx.subcommands.includes('history')) {
+			const options = ctx.options.history as { user?: string; };
+
+			return await this.handleHistory(ctx, options.user);
 		}
 
 
@@ -128,5 +147,27 @@ export default class Balance extends SlashCommand {
 		await otherUser.save();
 
 		return `You gave ${otherUser.toString()} ${formatMoney(amount)}`;
+	}
+
+	private async handleHistory(ctx: CommandContext, otherUserId?: string) {
+
+		const user = await User.get(otherUserId ? otherUserId : ctx.user.id);
+
+		if (!user) {
+			return "Cannot find user...";
+		}
+
+		let history = [];
+		if (!user?.balanceHistory) {
+			return `${user.toString()} does not have any balance history...`;
+		}
+
+		let historyString = `${user.toString()}'s balance history: \n`;
+
+		historyString += user.balanceHistory.splice(-10).map(history => {
+			return `- ${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType} \n${history.reason}`;
+		}).join('\n');
+
+		return historyString;
 	}
 }
