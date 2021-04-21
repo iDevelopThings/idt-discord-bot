@@ -145,7 +145,19 @@ export default class Invest extends SlashCommand {
 		}
 
 		user.balanceManager().deductFromBalance(amount);
+		user.balanceManager().changed({
+			amount       : amount,
+			balanceType  : "balance",
+			typeOfChange : "removed",
+			reason       : `Removed from balance... Adding to investment`
+		});
 		user.balanceManager().addToBalance(amount, 'invested');
+		user.balanceManager().changed({
+			amount       : amount,
+			balanceType  : "invested",
+			typeOfChange : "added",
+			reason       : `Added to investment`
+		});
 		await user.save();
 
 		return `${formatMoney(amount)} has been added to your investments.`;
@@ -157,13 +169,15 @@ export default class Invest extends SlashCommand {
 			return `You cannot claim for another ${user.cooldownManager().timeLeft('claim', true)}.`;
 		}
 
-		let income = user.balanceManager().income();
-
-		if(user.balanceManager().canUseBaseIncome()){
-			income = 50;
-		}
+		const income = user.balanceManager().income();
 
 		user.balanceManager().addToBalance(String(income));
+		user.balanceManager().changed({
+			amount       : String(income),
+			balanceType  : "balance",
+			typeOfChange : "added",
+			reason       : `Claimed investment income`
+		});
 		await user.save();
 
 		await user.cooldownManager().setUsed('claim');
@@ -236,14 +250,26 @@ export default class Invest extends SlashCommand {
 			return;
 		}
 
-		const withdrawAmount = numbro(amount).subtract(loss).value().toString();
+		const withdrawAmount = numbro(amount).subtract(loss).value();
 
 		if (loss > numbro(user.statistics.balance.mostLostToTaxes).value()) {
 			user.statistics.balance.mostLostToTaxes = String(loss);
 		}
 
-		user.balanceManager().deductFromBalance(withdrawAmount + loss, 'invested');
-		user.balanceManager().addToBalance(withdrawAmount);
+		user.balanceManager().deductFromBalance(String(withdrawAmount + loss), 'invested');
+		user.balanceManager().changed({
+			amount       : String(withdrawAmount + loss),
+			balanceType  : "invested",
+			typeOfChange : "removed",
+			reason       : `Withdrawn from investment`
+		});
+		user.balanceManager().addToBalance(String(withdrawAmount));
+		user.balanceManager().changed({
+			amount       : String(withdrawAmount),
+			balanceType  : "balance",
+			typeOfChange : "added",
+			reason       : `Added to balance from withdrawn investment`
+		});
 		await user.save();
 
 		await message.reactions.cache.each(r => r.remove());

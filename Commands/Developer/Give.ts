@@ -4,7 +4,7 @@ import User from "../../Models/User/User";
 import {guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 
-const ownerRole = guild().roles.cache.find(r => (r.name === 'Owner' || r.name === 'Admin'));
+const ownerRole = guild().roles.cache.find(r => (r.name === 'Owner' || r.name === 'Admin' || r.name === 'VIP IN THIS BITCH'));
 
 const permissions    = {};
 permissions[guildId] = [
@@ -28,7 +28,7 @@ export default class Give extends SlashCommand {
 			guildIDs          : guildId,
 			name              : 'give',
 			description       : 'Admin give command',
-			defaultPermission : false,
+			defaultPermission : true,
 			permissions       : permissions,
 			options           : [
 				{
@@ -70,6 +70,12 @@ export default class Give extends SlashCommand {
 			const usr = await User.get(options.user);
 
 			usr.balanceManager().addToBalance(options.amount);
+			usr.balanceManager().changed({
+				amount       : options.amount,
+				balanceType  : "balance",
+				typeOfChange : "added",
+				reason       : `Given money by ${ctx.user.username}`
+			});
 			await usr.save();
 
 			return `Given ${formatMoney(options.amount)} to <@${usr.id}>`;

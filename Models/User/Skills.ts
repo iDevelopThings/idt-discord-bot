@@ -82,9 +82,10 @@ export default class Skills {
 	 *
 	 * @param {SkillName} skill
 	 * @param {number} xp
+	 * @param forceSave
 	 * @returns {Promise<void>}
 	 */
-	async addXp(skill: SkillName, xp: number) {
+	async addXp(skill: SkillName, xp: number, forceSave = true) {
 		const originalLevel = Skills.levelForXp(this.user.skills[skill].xp);
 		const newLevel      = Skills.levelForXp(this.user.skills[skill].xp + xp);
 
@@ -101,7 +102,9 @@ export default class Skills {
 
 		this.user.skills[skill].xp += xp;
 		this.user.skills[skill].level = newLevel;
-		await this.user.save();
+
+		if (forceSave)
+			await this.user.save();
 	}
 
 

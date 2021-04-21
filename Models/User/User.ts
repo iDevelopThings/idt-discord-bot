@@ -57,12 +57,20 @@ export interface IPreferences {
 	botDmMessages: boolean;
 }
 
+export interface IBalanceHistory {
+	amount: string;
+	balanceType: keyof IBalances;
+	typeOfChange: "added" | "removed";
+	reason: string;
+}
+
 export interface IUser extends IDiscordUserInformation {
 	_id: ObjectId;
 	balances: IBalances;
 	statistics: IUserStatistics;
 	cooldowns: ITimeStates;
 	preferences: IPreferences;
+	balanceHistory: IBalanceHistory[];
 	skills: ISkills;
 	createdAt: Date;
 	updatedAt: Date;
@@ -93,13 +101,13 @@ export class User {
 
 		const createdUser = await this.collection().insertOne({
 			...discordUser,
-			statistics  : this.defaultStatistics(),
-			balances    : {
+			statistics     : this.defaultStatistics(),
+			balances       : {
 				balance  : '1000',
 				invested : '50'
 			},
-			cooldowns   : {},
-			skills      : {
+			cooldowns      : {},
+			skills         : {
 				chatting  : {
 					xp    : 0,
 					level : 1
@@ -117,12 +125,13 @@ export class User {
 					level : 1
 				},
 			},
-			preferences : {
+			preferences    : {
 				botDmMessages : true,
 			},
-			createdAt   : new Date(),
-			updatedAt   : new Date(),
-			leftAt      : null
+			balanceHistory : [],
+			createdAt      : new Date(),
+			updatedAt      : new Date(),
+			leftAt         : null
 		});
 
 		return this.collection().findOne({_id : createdUser.insertedId});

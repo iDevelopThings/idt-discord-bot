@@ -1,6 +1,6 @@
 import Investment from "../../Handlers/Investment";
 import {formatMoney, numbro} from "../../Util/Formatter";
-import {IBalances} from "./User";
+import {IBalanceHistory, IBalances} from "./User";
 import {UserInstance} from "./UserInstance";
 
 export default class Balance {
@@ -68,12 +68,20 @@ export default class Balance {
 	 * @returns {string | number}
 	 */
 	income(formatted = false) {
-		const invested       = numbro(this.user.balances.invested).value();
-		const investedAmount = invested < 50 ? 50 : invested;
-
-		const returns = Investment.returnsFor(numbro(investedAmount).value());
+		const invested = numbro(this.user.balances.invested).add(50).value();
+		const returns  = Investment.returnsFor(invested);
 
 		return formatted ? formatMoney(returns) : returns;
+	}
+
+	/**
+	 * Store a balance change history log
+	 * This is so we can track what happened/view a users change history
+	 *
+	 * @param {IBalanceHistory} history
+	 */
+	changed(history: IBalanceHistory) {
+		this.user.balanceHistory.push(history);
 	}
 
 }

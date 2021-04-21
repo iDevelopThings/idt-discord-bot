@@ -85,7 +85,7 @@ export default class Balance extends SlashCommand {
 		}
 
 
-		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get"
+		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get";
 	}
 
 	private async handleBalanceOutput(ctx: CommandContext, user: UserInstance) {
@@ -110,9 +110,21 @@ export default class Balance extends SlashCommand {
 		}
 
 		currentUser.balanceManager().deductFromBalance(amount);
+		currentUser.balanceManager().changed({
+			amount       : amount,
+			balanceType  : "balance",
+			typeOfChange : "removed",
+			reason       : `Gifted money to ${otherUser.username}`
+		});
 		await currentUser.save();
 
 		otherUser.balanceManager().addToBalance(amount);
+		otherUser.balanceManager().changed({
+			amount       : amount,
+			balanceType  : "balance",
+			typeOfChange : "added",
+			reason       : `Gifted by ${currentUser.username}`
+		});
 		await otherUser.save();
 
 		return `You gave ${otherUser.toString()} ${formatMoney(amount)}`;

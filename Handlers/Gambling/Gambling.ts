@@ -116,6 +116,12 @@ export class Gambling extends GamblingInstance {
 		this._betters.push({color, user, amount});
 
 		user.balanceManager().deductFromBalance(amount);
+		user.balanceManager().changed({
+			amount       : amount,
+			balanceType  : "balance",
+			typeOfChange : "removed",
+			reason       : `Placed a bet`
+		});
 		await user.save();
 
 		// If we're the first person to place a bet, we'll start
@@ -205,7 +211,12 @@ export class Gambling extends GamblingInstance {
 
 			winner.user = setStatistics(winner.user, winner.takings, 'wins');
 			winner.user.balanceManager().addToBalance(winner.takings);
-
+			winner.user.balanceManager().changed({
+				amount       : winner.takings,
+				balanceType  : "balance",
+				typeOfChange : "added",
+				reason       : `Won a bet`
+			});
 			await winner.user.save();
 
 			const gambleLevel = winner.user.skills.gambling.level;
