@@ -114,8 +114,8 @@ export class Gambling extends GamblingInstance {
 
 		if (existingBet && existingBet.color !== color) {
 			return {
-				joined: false,
-				message: 'You can\'t change colors mid bet.',
+				joined  : false,
+				message : 'You can\'t change colors mid bet.',
 			};
 		}
 
@@ -125,15 +125,15 @@ export class Gambling extends GamblingInstance {
 
 		if (numbro(amount).value() < minimumBet) {
 			return {
-				joined: false,
-				message: `You need to place a bet of at least $${minimumBet}`,
+				joined  : false,
+				message : `You need to place a bet of at least $${minimumBet}`,
 			};
 		}
 
 		if (existingBet) {
 			existingBet.amount = amount;
 		} else {
-			this._betters.push({ color, user, amount });
+			this._betters.push({color, user, amount});
 		}
 
 		user.balanceManager().deductFromBalance(amount);
@@ -417,14 +417,14 @@ export class Gambling extends GamblingInstance {
 		}
 
 		return this._betters
-		           .map(b => numbro(b.amount))
-		           .reduce((previousValue: Numbro, currentValue: Numbro) => {
-			           if (previousValue.value() < currentValue.value()) {
-				           return previousValue;
-			           }
+			.map(b => numbro(b.amount))
+			.reduce((previousValue: Numbro, currentValue: Numbro) => {
+				if (previousValue.value() < currentValue.value()) {
+					return previousValue;
+				}
 
-			           return currentValue;
-		           }).value();
+				return currentValue;
+			}).value();
 	}
 
 	private minimumBet() {
