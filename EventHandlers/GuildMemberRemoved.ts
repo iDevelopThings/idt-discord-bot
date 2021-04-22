@@ -11,23 +11,15 @@ type ClientEventsType = ClientEvents[ClientEventType];
 export default class GuildMemberRemoved extends BaseEventHandler<'guildMemberRemove'> {
 
 	async handle(member: GuildMember | PartialGuildMember) {
-		await User.update(
-			{id : member.id},
-			{
-				$currentDate : {
-					leftAt : true
-				}
-			},
-			false
-		);
 		const introChannel = guild().channels.cache.find(c => c.name.includes('intro_channel')) as TextChannel;
 
 		if (!introChannel) {
 			return;
 		}
 
-		await introChannel.send(`${member.toString()} has left the server.`)
+		await introChannel.send(`${member.displayName} has left the server.`);
 
+		await User.deleteUser(member.id);
 	}
 
 	getEventName(): ClientEventType {

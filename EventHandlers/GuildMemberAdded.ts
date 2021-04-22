@@ -20,10 +20,6 @@ export default class GuildMemberAdded extends BaseEventHandler<ClientEventType> 
 			return;
 		}
 
-		if (user.leftAt !== null) {
-			return await introChannel.send(`${member.toString()} is back after an adventure that lasted... ${dayjs(user.leftAt).fromNow(true)}`);
-		}
-
 		await introChannel.send(`Welcome ${member.toString()}`);
 	}
 

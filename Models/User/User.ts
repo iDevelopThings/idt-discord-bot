@@ -173,6 +173,10 @@ export class User {
 		return new UserInstance(user);
 	}
 
+	static deleteUser(id : string){
+		return this.collection().deleteOne({id : id});
+	}
+
 	static async getDiscordUser(discordId): Promise<GuildMember> {
 		const discordUser = await guild().members.fetch(discordId);
 
