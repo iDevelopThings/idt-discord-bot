@@ -113,6 +113,15 @@ export class Gambling extends GamblingInstance {
 			};
 		}
 
+		const minimumBet = this.minimumBet();
+
+		if (numbro(amount).value() < minimumBet) {
+			return {
+				joined: false,
+				message: `You need to place a bet of at least $${minimumBet}`,
+			};
+		}
+
 		this._betters.push({color, user, amount});
 
 		user.balanceManager().deductFromBalance(amount);
@@ -128,6 +137,9 @@ export class Gambling extends GamblingInstance {
 		// the countdown for other's to place bets.
 		if (this._betters.length === 1) {
 			this.startTimer();
+		} else if (this._status === GamblingStatus.STARTING) {
+			// Reset the timer once a bet is placed
+			this._startingTimeLeft = this.getCountdownTotalSeconds();
 		}
 
 		return {
@@ -385,6 +397,28 @@ export class Gambling extends GamblingInstance {
 
 	getUsersJoinedCount() {
 		return this._betters.length;
+	}
+
+	private smallestBet() {
+		if (this._betters.length === 0) {
+			return null;
+		}
+
+		return this._betters
+		           .map(b => numbro(b.amount))
+		           .reduce((previousValue: Numbro, currentValue: Numbro) => {
+			           if (previousValue.value() < currentValue.value()) {
+				           return previousValue;
+			           }
+
+			           return currentValue;
+		           }).value();
+	}
+
+	private minimumBet() {
+		const smallestBet = this.smallestBet();
+
+		return (smallestBet === null ? 0 : smallestBet * 0.7);
 	}
 
 }
