@@ -150,24 +150,31 @@ export default class Balance extends SlashCommand {
 	}
 
 	private async handleHistory(ctx: CommandContext, otherUserId?: string) {
-
 		const user = await User.get(otherUserId ? otherUserId : ctx.user.id);
 
 		if (!user) {
 			return "Cannot find user...";
 		}
 
-		let history = [];
-		if (!user?.balanceHistory) {
-			return `${user.toString()} does not have any balance history...`;
+		const embed = new MessageEmbed()
+			.setColor('BLUE')
+			.setAuthor(user.username, user.avatar, "");
+
+		if (!Array.isArray(user.balanceHistory) || user.balanceHistory.length === 0) {
+			embed.addField('No Balance History', 'Start gambling bich...');
+		} else {
+			const balanceHistory = user.balanceHistory.slice(-10);
+
+			for (let i = 0; i < balanceHistory.length; i++) {
+				const history = balanceHistory[i];
+
+				embed.addField(
+					`#${user.balanceHistory.length - (balanceHistory.length - i - 1)} - ${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType}`,
+					history.reason
+				);
+			}
 		}
 
-		let historyString = '';
-
-		historyString += user.balanceHistory.splice(-10).map(history => {
-			return `${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType} \n${history.reason}\n`;
-		}).join('\n');
-
-		return `${user.toString()}'s balance history: \n` + "```"+historyString+"```";
+		await ctx.send({embeds : [embed]});
 	}
 }
