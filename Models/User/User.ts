@@ -185,7 +185,7 @@ export class User {
 		return {
 			id            : discordUser.id,
 			color         : discordUser.displayHexColor,
-			avatar        : discordUser.user.avatarURL(),
+			avatar        : discordUser.user.avatarURL({format : 'png'}),
 			discriminator : discordUser.user.discriminator,
 			displayName   : discordUser.displayName,
 			username      : discordUser.user.username
