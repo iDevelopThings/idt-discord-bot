@@ -1,8 +1,8 @@
 import {ObjectId} from "mongodb";
-
 import Activities, {ActivityName, IActivities} from "./Activities";
 import Balance from "./Balance";
 import Cooldown, {ITimeStates} from "./Cooldown";
+import Moderation from "../Moderation/Moderation";
 import Skills from "./Skills";
 import {IBalanceHistory, IBalances, IPreferences, ISkills, IUser, IUserStatistics, User} from "./User";
 
@@ -17,11 +17,11 @@ export class UserInstance implements IUser {
 	public discriminator: string;
 	public color: string;
 	public balances: IBalances;
-	public balanceHistory : IBalanceHistory[];
+	public balanceHistory: IBalanceHistory[];
 	public statistics: IUserStatistics;
 	public cooldowns: ITimeStates;
 	public preferences: IPreferences;
-	public activities: {[key : string] : IActivities} //Record<ActivityName, IActivities>;
+	public activities: { [key: string]: IActivities }; //Record<ActivityName, IActivities>;
 	public skills: ISkills;
 	public createdAt: Date;
 	public updatedAt: Date;
@@ -30,8 +30,8 @@ export class UserInstance implements IUser {
 	constructor(user: IUser) {
 		Object.assign(this, user);
 
-		if(!user?.balanceHistory){
-			this.balanceHistory = []
+		if (!user?.balanceHistory) {
+			this.balanceHistory = [];
 		}
 	}
 
@@ -49,6 +49,10 @@ export class UserInstance implements IUser {
 
 	activityManager(): Activities {
 		return new Activities(this);
+	}
+
+	moderationManager(): Moderation {
+		return new Moderation(this);
 	}
 
 	/**

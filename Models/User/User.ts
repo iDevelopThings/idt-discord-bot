@@ -83,6 +83,16 @@ export class User {
 		return collection<IUser>('users');
 	}
 
+	static async findOne(filter: FilterQuery<IUser>): Promise<UserInstance> {
+		const record = await this.collection().findOne(filter);
+
+		if (!record) {
+			return null;
+		}
+
+		return new UserInstance(record);
+	}
+
 	static async get(discordId: string): Promise<UserInstance> {
 
 		let user = await this.collection().findOne({

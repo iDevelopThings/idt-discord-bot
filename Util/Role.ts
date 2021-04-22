@@ -22,6 +22,58 @@ export const adminRoles = (): Role[] => {
 	return adminRoles;
 };
 
+export const getRole = (role: string): Role => {
+	return guild().roles.cache.find(r => r.name.toLowerCase() === role.toLowerCase());
+};
+
+/**
+ * Get roles from the Guild (case-insensitive)
+ *
+ * @param {...string} roles
+ * @return {Role[]}
+ */
+export const getRoles = (...roles: string[]): Role[] => {
+	const resolvedRoles = [];
+
+	for (const name of roles) {
+		const role = getRole(name);
+
+		if (!role) {
+			continue;
+		}
+
+		resolvedRoles.push(role);
+	}
+
+	return resolvedRoles;
+};
+
+export const mapRolesToCommandPermissions = (roles: Role[]): CommandPermissions => {
+	const permissions = {};
+
+	permissions[guildId] = roles.map(role => ({
+		id         : role.id,
+		type       : 1,
+		permission : true
+	}));
+
+	return permissions;
+};
+
+export const hasRole = (user: Member | GuildMember, ...roles: string[]): boolean => {
+	const resolvedRoles = getRoles(...roles).map(r => r.id);
+
+	if (user instanceof Member) {
+		return user.roles.some(roleId => resolvedRoles.includes(roleId));
+	}
+
+	if (user instanceof GuildMember) {
+		return user.roles.cache.some(role => resolvedRoles.includes(role.id));
+	}
+
+	return false;
+};
+
 /**
  * Admin permissions used in command permissions
  *

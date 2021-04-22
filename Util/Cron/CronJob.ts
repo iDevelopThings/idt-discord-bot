@@ -2,15 +2,14 @@ import ms from 'ms';
 import {collection} from "../../Models/ModelHelper";
 
 export default class CronJob {
-
 	handlerId: string;
 	runEvery: string     = null;
 	lastRun: Date | null = null;
 
-
 	public canRun() {
-		if (this.handlerId === null)
+		if (this.handlerId === null) {
 			return false;
+		}
 
 		if (this.lastRun === null) {
 			return true;
@@ -31,5 +30,4 @@ export default class CronJob {
 
 		this.lastRun = new Date();
 	}
-
 }
