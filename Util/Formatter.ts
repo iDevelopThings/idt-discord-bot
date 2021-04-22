@@ -3,6 +3,7 @@ import Balance from "../Models/User/Balance";
 import Numbro = numbroInst.Numbro;
 import Format = numbroInst.Format;
 import {lowerCase, upperCase, upperFirst} from 'lodash';
+import {dayjs} from "./Date";
 
 export {Numbro};
 
@@ -86,4 +87,8 @@ export const isValidNumber = (amount: string, balanceManager?: Balance): Invalid
 
 export const title = (string) => {
 	return upperFirst(lowerCase(upperCase(string)));
+};
+
+export const formatDate = (date: Date, format: string = 'DD/MM/YYYY h:mm:ssa Z') => {
+	return dayjs(date).format(format);
 };

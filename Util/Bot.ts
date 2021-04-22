@@ -11,6 +11,12 @@ export const getGambleChannel = (): TextChannel => {
 	}) as TextChannel;
 };
 
+export const getChannel = (channel: string): TextChannel => {
+	return client.channels.cache.find(
+		(c: TextChannel) => c.isText() && c.name.toLowerCase() === channel.toLowerCase()
+	) as TextChannel;
+};
+
 
 export const getGamblingWebhook = async () => {
 	//	const storedId = await BotSettings.get<string>('gamblingWebhookId');

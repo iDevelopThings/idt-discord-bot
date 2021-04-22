@@ -61,7 +61,7 @@ export default class CronHandler {
 		return job.run();
 	}
 
-	private async loadCrons() {
+	private loadCrons() {
 		const cronJobs: { [key: string]: any } = require('require-all')({
 			dirname   : path.join(__dirname, 'Jobs'),
 			recursive : true,
@@ -71,13 +71,27 @@ export default class CronHandler {
 			},
 		});
 
-		for (const name in cronJobs) {
-			this.register(cronJobs[name])
-				.then(() => Log.info('[CRON] Registered: ' + name))
+		return Promise.all(this.loadCronFolder(cronJobs));
+	}
+
+	private loadCronFolder(cronFolder: any) {
+		const queue = [];
+
+		for (const cron in cronFolder) {
+			if (typeof cronFolder[cron] === 'object' && !(cronFolder[cron].prototype instanceof CronJob)) {
+				queue.push(...this.loadCronFolder(cronFolder[cron]));
+
+				continue;
+			}
+
+			queue.push(this.register(cronFolder[cron])
+				.then(() => Log.info('[CRON] Registered: ' + cron))
 				.catch(error => {
-					Log.error('[CRON] Failed to register: ' + name);
+					Log.error('[CRON] Failed to register: ' + cron);
 					console.trace(error);
-				});
+				}));
 		}
+
+		return queue;
 	}
 }
