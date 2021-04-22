@@ -85,17 +85,7 @@ export default class Leaderboard extends SlashCommand {
 		const drawBalances = async (avatars = false) => {
 
 			for (let usersKey in users) {
-
 				const user: IUser = users[usersKey];
-				let discordUser;
-				try {
-					discordUser = await guild().members.fetch({
-						user : user.id
-					});
-				} catch (error) {
-					console.error(error);
-					continue;
-				}
 
 				const username             = `${user.displayName}`;
 				context.font               = '400 25px sans-serif';
@@ -129,7 +119,7 @@ export default class Leaderboard extends SlashCommand {
 				userContext.closePath();
 				userContext.clip();
 
-				const avatar = await loadImage(discordUser.user.avatarURL({format : 'png'}));
+				const avatar = await loadImage(user.avatar);
 				userContext.drawImage(avatar, 10, 10, 30, 30);
 				userContext.restore();
 
