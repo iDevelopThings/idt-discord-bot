@@ -84,4 +84,27 @@ export default class Balance {
 		this.user.balanceHistory.push(history);
 	}
 
+	/**
+	 * Claim investment money, used by the bot every 30m
+	 * automatically & by the /investment claim command
+	 *
+	 * @returns {Promise<void>}
+	 */
+	async claimInvestment() {
+		const income = this.user.balanceManager().income();
+
+		this.user.balanceManager().addToBalance(String(income));
+		this.user.balanceManager().changed({
+			amount       : String(income),
+			balanceType  : "balance",
+			typeOfChange : "added",
+			reason       : `Claimed investment income`
+		});
+		await this.user.save();
+
+		await this.user.cooldownManager().setUsed('claim');
+
+		return {income};
+	}
+
 }

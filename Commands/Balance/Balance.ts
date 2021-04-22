@@ -162,12 +162,12 @@ export default class Balance extends SlashCommand {
 			return `${user.toString()} does not have any balance history...`;
 		}
 
-		let historyString = `${user.toString()}'s balance history: \n`;
+		let historyString = '';
 
 		historyString += user.balanceHistory.splice(-10).map(history => {
-			return `- ${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType} \n${history.reason}`;
+			return `${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType} \n${history.reason}\n`;
 		}).join('\n');
 
-		return historyString;
+		return `${user.toString()}'s balance history: \n` + "```"+historyString+"```";
 	}
 }

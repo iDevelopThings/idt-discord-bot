@@ -10,9 +10,12 @@ import {GatewayServer, SlashCreator} from "slash-create";
 import BaseEventHandler from "./EventHandlers/BaseEventHandler";
 import {database} from "./Models/ModelHelper";
 import {guild, guildId} from "./Util/Bot";
+import CronHandler from "./Util/Cron/CronHandler";
+import BotClaimInvestment from "./Util/Cron/Jobs/BotClaimInvestment";
 
-const client  = new Discord.Client();
-const creator = new SlashCreator({
+const cronHandler = new CronHandler();
+const client      = new Discord.Client();
+const creator     = new SlashCreator({
 	applicationID : process.env.APPLICATION_ID,
 	//	publicKey     : process.env.CLIENT_PUBLIC_KEY,
 	token : process.env.BOT_TOKEN,
@@ -28,6 +31,7 @@ creator.on('commandError', (command, error) => {
 	Log.error(`Command ${command.commandName}`);
 	console.trace(error);
 });
+
 
 export const boundEvents: (keyof ClientEvents)[] = [];
 
@@ -86,6 +90,8 @@ async function boot() {
 	await creator.syncCommandsIn(guildId, true);
 	await creator.syncCommandPermissions();
 
+	await cronHandler.register(BotClaimInvestment);
+	cronHandler.boot();
 	//	ActivityEndedCron.start();
 }
 

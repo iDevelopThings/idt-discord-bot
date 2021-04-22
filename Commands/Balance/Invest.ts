@@ -169,18 +169,7 @@ export default class Invest extends SlashCommand {
 			return `You cannot claim for another ${user.cooldownManager().timeLeft('claim', true)}.`;
 		}
 
-		const income = user.balanceManager().income();
-
-		user.balanceManager().addToBalance(String(income));
-		user.balanceManager().changed({
-			amount       : String(income),
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Claimed investment income`
-		});
-		await user.save();
-
-		await user.cooldownManager().setUsed('claim');
+		const {income} = await user.balanceManager().claimInvestment();
 
 		return `You claimed ${formatMoney(income, true)} from your investments.`;
 	}
