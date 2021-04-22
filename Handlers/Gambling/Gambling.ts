@@ -147,11 +147,10 @@ export class Gambling extends GamblingInstance {
 
 		// If we're the first person to place a bet, we'll start
 		// the countdown for other's to place bets.
-		if (this._betters.length === 1) {
+		if (this._status === GamblingStatus.STARTING) {
+			this.restartCountdown();
+		} else {
 			this.startTimer();
-		} else if (this._status === GamblingStatus.STARTING) {
-			// Reset the timer once a bet is placed
-			this._startingTimeLeft = this.getCountdownTotalSeconds();
 		}
 
 		return {
