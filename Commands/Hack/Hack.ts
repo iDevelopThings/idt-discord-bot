@@ -44,7 +44,7 @@ export default class Hack extends SlashCommand {
 		const gamblingChannel = getGambleChannel();
 
 		if (ctx.channelID !== gamblingChannel?.id) {
-			return `You can onlyl use hacking commands in the ${gamblingChannel.toString()} channel`;
+			return `You can only use hacking commands in the ${gamblingChannel.toString()} channel`;
 		}
 
 		const user = await User.get(ctx.user.id);
