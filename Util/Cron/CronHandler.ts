@@ -1,73 +1,83 @@
-import {Log} from "@envuso/common";
-import {collection} from "../../Models/ModelHelper";
-import CronJob from "./CronJob";
+import { Log } from '@envuso/common';
+import { collection } from '../../Models/ModelHelper';
+import CronJob from './CronJob';
+import path from 'path';
 
 export interface ICron {
-	handlerId: string;
-	runEvery: string;
-	lastRun: Date | null;
+  handlerId: string;
+  runEvery: string;
+  lastRun: Date | null;
 }
 
 export default class CronHandler {
+  private _jobs: CronJob[] = [];
+  private _tick: NodeJS.Timeout;
 
-	private _jobs: CronJob[] = [];
-	private _tick: NodeJS.Timeout;
+  async boot() {
+    await this.loadCrons();
 
-	boot() {
-		//		const crons = await collection<ICron>('crons').find().toArray();
-		//
-		//		for (const cron of crons) {
-		//			switch (cron.handlerId) {
-		//				case 'bot-claim-investment':
-		//					this._jobs.push(new BotClaimInvestment());
-		//					break;
-		//			}
-		//		}
+    this._tick = setInterval(this.run.bind(this), 60 * 1000);
+  }
 
-		this._tick = setInterval(this.run.bind(this), 60 * 1000);
-	}
+  async register(jobClass: typeof CronJob) {
+    const job = new jobClass();
+    const jobInfo = await collection<ICron>('crons').findOne({ handlerId: job.handlerId });
 
-	run() {
-		for (const job of this._jobs) {
-			this.processJob(job)
-				.then(() => Log.info('Processed job: ' + job.handlerId))
-				.catch(error => {
-					Log.error('Failed to process job: ' + job.handlerId);
-					console.trace(error);
-				});
-		}
-	}
+    if (jobInfo) {
+      job.handlerId = jobInfo.handlerId;
+      job.runEvery = jobInfo.runEvery;
+      job.lastRun = jobInfo.lastRun;
 
-	processJob(job: CronJob) {
-		if (!job.canRun()) {
-			return Promise.resolve();
-		}
+      this._jobs.push(job);
 
-		return job.run();
-	}
+      return;
+    }
 
-	async register(jobClass: typeof CronJob) {
+    await collection<ICron>('crons').insertOne({
+      handlerId: job.handlerId,
+      runEvery: job.runEvery,
+      lastRun: job.lastRun,
+    });
 
-		const job = new jobClass();
+    this._jobs.push(job);
+  }
 
-		const jobInfo = await collection<ICron>('crons').findOne({handlerId : job.handlerId});
-		if (jobInfo) {
-			job.handlerId = jobInfo.handlerId;
-			job.runEvery  = jobInfo.runEvery;
-			job.lastRun   = jobInfo.lastRun;
+  run() {
+    for (const job of this._jobs) {
+      this.processJob(job)
+          .then(() => Log.info('Processed job: ' + job.handlerId))
+          .catch(error => {
+            Log.error('Failed to process job: ' + job.handlerId);
+            console.trace(error);
+          });
+    }
+  }
 
-			this._jobs.push(job);
+  processJob(job: CronJob) {
+    if (!job.canRun()) {
+      return Promise.resolve();
+    }
 
-			return;
-		}
+    return job.run();
+  }
 
-		await collection<ICron>('crons').insertOne({
-			handlerId : job.handlerId,
-			runEvery  : job.runEvery,
-			lastRun   : job.lastRun
-		});
+  private async loadCrons() {
+    const cronJobs: { [key: string]: any } = require('require-all')({
+      dirname: path.join(__dirname, 'Jobs'),
+      recursive: true,
+      filter: /^(.+)\.(j|t)s$/,
+      resolve: function (Handler) {
+        return Handler.default;
+      },
+    });
 
-		this._jobs.push(job);
-	}
-
+    for (const name in cronJobs) {
+      this.register(cronJobs[name])
+          .then(() => Log.info('[CRON] Registered: ' + name))
+          .catch(error => {
+            Log.error('[CRON] Failed to register: ' + name);
+            console.trace(error);
+          });
+    }
+  }
 }
