@@ -96,6 +96,10 @@ export class User {
 		return new UserInstance(user);
 	}
 
+	static async all() {
+		return this.collection().find().toArray();
+	}
+
 	static async createUser(discordId: string) {
 		const discordUser = await this.getDiscordUserInformation(discordId);
 
