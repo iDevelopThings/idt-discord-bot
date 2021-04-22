@@ -5,7 +5,6 @@ import path from 'path';
 
 export interface ICron {
 	handlerId: string;
-	runEvery: string;
 	lastRun: Date | null;
 }
 
@@ -24,9 +23,7 @@ export default class CronHandler {
 		const jobInfo = await collection<ICron>('crons').findOne({handlerId : job.handlerId});
 
 		if (jobInfo) {
-			job.handlerId = jobInfo.handlerId;
-			job.runEvery  = jobInfo.runEvery;
-			job.lastRun   = jobInfo.lastRun;
+			job.lastRun   = new Date(jobInfo.lastRun);
 
 			this._jobs.push(job);
 
@@ -35,7 +32,6 @@ export default class CronHandler {
 
 		await collection<ICron>('crons').insertOne({
 			handlerId : job.handlerId,
-			runEvery  : job.runEvery,
 			lastRun   : job.lastRun,
 		});
 

@@ -28,6 +28,8 @@ export default class CronJob {
 				}
 			}
 		);
+
+		this.lastRun = new Date();
 	}
 
 }
