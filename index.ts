@@ -94,32 +94,11 @@ async function boot() {
 	await cronHandler.boot();
 	//	ActivityEndedCron.start();
 
-	await updateUsers();
 }
 
 boot().then(() => Log.info('Le bot is running'));
 
 
-async function updateUsers() {
-
-	const users = await User.all();
-
-	for (let user of users) {
-		try {
-			const discordUser = await User.getDiscordUserInformation(user.id);
-
-			await User.update({id : user.id}, {
-				$set : {
-					avatar : discordUser.avatar
-				}
-			});
-
-		} catch (error) {
-			Log.error(error);
-		}
-	}
-
-}
 
 export {
 	client
