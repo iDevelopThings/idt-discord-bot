@@ -125,10 +125,14 @@ export default class GambleRedBlack extends SlashCommand {
 		);
 		gambling.setChannel(getGambleChannel());
 
-		const {joined, message} = await gambling.placeBet(user, color, amount);
+		const {joined, message, updatedBet} = await gambling.placeBet(user, color, amount);
 
 		if (!joined) {
 			return message;
+		}
+
+		if (updatedBet) {
+			return 'Bet updated.';
 		}
 
 		return 'Joined the bet.';

@@ -80,6 +80,10 @@ export class Gambling extends GamblingInstance {
 		return this._betters.some(bet => bet.user.id === user.id);
 	}
 
+	private getUserBet(user: UserInstance) {
+		return this._betters.find(bet => bet.user.id === user.id);
+	}
+
 	/**
 	 * Place a bet as x user against a color
 	 *
@@ -106,12 +110,16 @@ export class Gambling extends GamblingInstance {
 			};
 		}
 
-		if (this.hasPlacedBet(user)) {
+		const existingBet = this.getUserBet(user);
+
+		if (existingBet && existingBet.color !== color) {
 			return {
-				joined  : false,
-				message : 'You have already placed a bet'
+				joined: false,
+				message: 'You can\'t change colors mid bet.',
 			};
 		}
+
+		amount = this.getTotalBetAmount(user, amount);
 
 		const minimumBet = this.minimumBet();
 
@@ -122,7 +130,11 @@ export class Gambling extends GamblingInstance {
 			};
 		}
 
-		this._betters.push({color, user, amount});
+		if (existingBet) {
+			existingBet.amount = amount;
+		} else {
+			this._betters.push({ color, user, amount });
+		}
 
 		user.balanceManager().deductFromBalance(amount);
 		user.balanceManager().changed({
@@ -143,8 +155,9 @@ export class Gambling extends GamblingInstance {
 		}
 
 		return {
-			joined  : true,
-			message : 'Success'
+			joined     : true,
+			message    : 'Success',
+			updatedBet : !!existingBet,
 		};
 	}
 
@@ -419,6 +432,16 @@ export class Gambling extends GamblingInstance {
 		const smallestBet = this.smallestBet();
 
 		return (smallestBet === null ? 0 : smallestBet * 0.7);
+	}
+
+	private getTotalBetAmount(user: UserInstance, amount: string) {
+		const existingBet = this.getUserBet(user);
+
+		if (!existingBet) {
+			return amount;
+		}
+
+		return numbro(existingBet.amount).add(numbro(amount).value()).format();
 	}
 
 }
