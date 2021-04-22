@@ -3,7 +3,7 @@ import CommandContext from "slash-create/lib/context";
 import {client} from "../../index";
 import User from "../../Models/User/User";
 import {UserInstance} from "../../Models/User/UserInstance";
-import {guildId} from "../../Util/Bot";
+import {getGambleChannel, guildId} from '../../Util/Bot';
 import {formatMoney, formatPercentage, formatXp, numbro, percentOf} from "../../Util/Formatter";
 import {getRandomInstance, getRandomInt, getRandomPercentage} from "../../Util/Random";
 
@@ -41,6 +41,11 @@ export default class Hack extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
+		const gamblingChannel = getGambleChannel();
+
+		if (ctx.channelID !== gamblingChannel?.id) {
+			return `You can only use hacking commands in the ${gamblingChannel.toString()} channel`;
+		}
 
 		const user = await User.get(ctx.user.id);
 
