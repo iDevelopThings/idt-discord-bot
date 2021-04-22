@@ -56,14 +56,14 @@ export default class Hack extends SlashCommand {
 		}
 
 		if (options?.user?.user) {
-			if(client.user.id === options.user.user){
-				return "You cannot hack the bot like this. Use /hack bot."
+			if (client.user.id === options.user.user) {
+				return "You cannot hack the bot like this. Use /hack bot.";
 			}
 
 			return await this.hackUser(user, options?.user?.user);
 		}
 
-		return "You must use /hack bot or /hack user"
+		return "You must use /hack bot or /hack user";
 	}
 
 	private async hackBot(user: UserInstance) {
@@ -98,7 +98,7 @@ export default class Hack extends SlashCommand {
 				});
 				await user.save();
 
-				const botAmount = numbro(stealAmount).divide(2).value().toString()
+				const botAmount = numbro(stealAmount).divide(2).value().toString();
 
 				bot.balanceManager().addToBalance(botAmount);
 				bot.balanceManager().changed({
@@ -147,8 +147,8 @@ export default class Hack extends SlashCommand {
 	private async hackUser(user: UserInstance, otherUserId: string) {
 		const otherUser = await User.get(otherUserId);
 
-		if(otherUser.id === user.id){
-			return "You can't hack yourself silly."
+		if (otherUser.id === user.id) {
+			return "You can't hack yourself silly.";
 		}
 
 		if (!otherUser.balanceManager().hasMoney()) {
