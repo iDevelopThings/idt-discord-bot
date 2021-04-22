@@ -90,8 +90,7 @@ async function boot() {
 	await creator.syncCommandsIn(guildId, true);
 	await creator.syncCommandPermissions();
 
-	await cronHandler.register(BotClaimInvestment);
-	cronHandler.boot();
+	await cronHandler.boot();
 	//	ActivityEndedCron.start();
 }
 
