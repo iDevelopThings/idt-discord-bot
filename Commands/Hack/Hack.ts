@@ -51,6 +51,10 @@ export default class Hack extends SlashCommand {
 		}
 
 		if (options?.user?.user) {
+			if(client.user.id === options.user.user){
+				return "You cannot hack the bot like this. Use /hack bot."
+			}
+
 			return await this.hackUser(user, options?.user?.user);
 		}
 
