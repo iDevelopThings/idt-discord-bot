@@ -80,6 +80,10 @@ export class Gambling extends GamblingInstance {
 		return this._betters.some(bet => bet.user.id === user.id);
 	}
 
+	private getUserBet(user: UserInstance) {
+		return this._betters.find(bet => bet.user.id === user.id);
+	}
+
 	/**
 	 * Place a bet as x user against a color
 	 *
@@ -106,14 +110,31 @@ export class Gambling extends GamblingInstance {
 			};
 		}
 
-		if (this.hasPlacedBet(user)) {
+		const existingBet = this.getUserBet(user);
+
+		if (existingBet && existingBet.color !== color) {
 			return {
-				joined  : false,
-				message : 'You have already placed a bet'
+				joined: false,
+				message: 'You can\'t change colors mid bet.',
 			};
 		}
 
-		this._betters.push({color, user, amount});
+		amount = this.getTotalBetAmount(user, amount);
+
+		const minimumBet = this.minimumBet();
+
+		if (numbro(amount).value() < minimumBet) {
+			return {
+				joined: false,
+				message: `You need to place a bet of at least $${minimumBet}`,
+			};
+		}
+
+		if (existingBet) {
+			existingBet.amount = amount;
+		} else {
+			this._betters.push({ color, user, amount });
+		}
 
 		user.balanceManager().deductFromBalance(amount);
 		user.balanceManager().changed({
@@ -128,11 +149,15 @@ export class Gambling extends GamblingInstance {
 		// the countdown for other's to place bets.
 		if (this._betters.length === 1) {
 			this.startTimer();
+		} else if (this._status === GamblingStatus.STARTING) {
+			// Reset the timer once a bet is placed
+			this._startingTimeLeft = this.getCountdownTotalSeconds();
 		}
 
 		return {
-			joined  : true,
-			message : 'Success'
+			joined     : true,
+			message    : 'Success',
+			updatedBet : !!existingBet,
 		};
 	}
 
@@ -385,6 +410,38 @@ export class Gambling extends GamblingInstance {
 
 	getUsersJoinedCount() {
 		return this._betters.length;
+	}
+
+	private smallestBet() {
+		if (this._betters.length === 0) {
+			return null;
+		}
+
+		return this._betters
+		           .map(b => numbro(b.amount))
+		           .reduce((previousValue: Numbro, currentValue: Numbro) => {
+			           if (previousValue.value() < currentValue.value()) {
+				           return previousValue;
+			           }
+
+			           return currentValue;
+		           }).value();
+	}
+
+	private minimumBet() {
+		const smallestBet = this.smallestBet();
+
+		return (smallestBet === null ? 0 : smallestBet * 0.7);
+	}
+
+	private getTotalBetAmount(user: UserInstance, amount: string) {
+		const existingBet = this.getUserBet(user);
+
+		if (!existingBet) {
+			return amount;
+		}
+
+		return numbro(existingBet.amount).add(numbro(amount).value()).format();
 	}
 
 }

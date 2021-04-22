@@ -2,6 +2,8 @@
 yarn-error.log
 /dist
 .env
-/.forge.yml
+.idea/
+.forge.yml
+
 # Project exclude paths
 /node_modules/
