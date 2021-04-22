@@ -76,6 +76,6 @@ export class ModerationLogInstance implements IModerationLog {
 				return;
 		}
 
-		return getChannel('mod-log').send({embed});
+		return getChannel('mod-logs').send({embed});
 	}
 }
