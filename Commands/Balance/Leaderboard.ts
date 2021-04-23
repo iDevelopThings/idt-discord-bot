@@ -3,7 +3,7 @@ import {MessageAttachment, TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User, {IUser} from "../../Models/User/User";
-import {guild, guildId} from "../../Util/Bot";
+import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney} from "../../Util/Formatter";
 
 
@@ -33,6 +33,11 @@ export default class Leaderboard extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
+		const gambleChannel = getChannel('gambling');
+
+		if (ctx.channelID !== gambleChannel?.id) {
+			return `You can only use /leaderboard commands in the ${gambleChannel.toString()} channel.`;
+		}
 
 		const type      = ctx.options.type as string;
 		const typeTitle = type.slice(0, 1).toUpperCase() + type.slice(1);
