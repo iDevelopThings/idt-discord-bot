@@ -54,19 +54,29 @@ export default class Mute extends SlashCommand {
 			reason?: string
 		};
 
-		const valid = numbroParse(minutes, {output : 'number'});
+		const valid = Math.ceil(numbroParse(minutes, {output : 'number'}));
 
-		if (!valid || valid < 0) {
+		if (isNaN(valid) || valid < 0) {
 			return 'Invalid minutes';
 		}
 
-		const user   = await User.get(userId);
-		const result = await user.moderationManager().mute(valid, reason, ctx.member.id);
+		const user = await User.get(userId);
+		let result;
+
+		if (valid === 0) {
+			result = await user.moderationManager().unmute();
+		} else {
+			result = await user.moderationManager().mute(valid, reason, ctx.member.id);
+		}
 
 		if (!!result) {
 			return result;
 		}
 
-		return `${user.toString()} has been muted for ${valid} minute(s)`;
+		if (valid === 0) {
+			return `${user.toString()} has been unmuted.`;
+		}
+
+		return `${user.toString()} has been muted for ${valid} minute(s).`;
 	}
 }
