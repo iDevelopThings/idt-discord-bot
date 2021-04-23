@@ -35,6 +35,17 @@ export default class Moderation {
 		}
 
 		await member.roles.remove(getRole('muted').id);
+		// TODO: Does this need to updateMany?
+		await ModerationLog.update({
+			type        : ModerationType.MUTE,
+			userId      : this.user._id,
+			endAt       : {
+				$gte : new Date()
+			},
+			processedAt : null
+		}, {
+			processedAt : new Date()
+		});
 
 		Log.info(`Unmuted ${this.user.username}:${this.user.discriminator}`);
 	}
