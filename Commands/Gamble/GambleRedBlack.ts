@@ -3,7 +3,7 @@ import CommandContext from "slash-create/lib/context";
 import {GamblingInstanceManager, GamblingInstanceType} from "../../Handlers/Gambling/GamblingInstanceManager";
 import {Gambling, GamblingColor} from "../../Handlers/Gambling/Gambling";
 import User from "../../Models/User/User";
-import {getGambleChannel, guildId} from "../../Util/Bot";
+import {getChannel, getGambleChannel, guildId} from "../../Util/Bot";
 import {numbro, numbroParse, percentOf} from "../../Util/Formatter";
 
 export default class GambleRedBlack extends SlashCommand {
@@ -101,11 +101,10 @@ export default class GambleRedBlack extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
+		const gambleChannel = getChannel('gambling');
 
-		const gamblingChannel = getGambleChannel();
-
-		if (ctx.channelID !== gamblingChannel?.id) {
-			return 'You can only use gambling commands in the ' + gamblingChannel.toString() + ' channel';
+		if (ctx.channelID !== gambleChannel?.id) {
+			return `You can only use /gamble commands in the ${gambleChannel.toString()} channel.`;
 		}
 
 		const user = await User.get(ctx.user.id);

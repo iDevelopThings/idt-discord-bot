@@ -3,7 +3,7 @@ import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
 import {UserInstance} from "../../Models/User/UserInstance";
-import {guild, guildId} from "../../Util/Bot";
+import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 
 export default class Balance extends SlashCommand {
@@ -72,6 +72,11 @@ export default class Balance extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
+		const gambleChannel = getChannel('gambling');
+
+		if (ctx.channelID !== gambleChannel?.id) {
+			return `You can only use /balance commands in the ${gambleChannel.toString()} channel.`;
+		}
 
 		if (ctx.subcommands.includes('get')) {
 			const user = await User.get(ctx.user.id);

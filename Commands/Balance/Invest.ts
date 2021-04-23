@@ -4,7 +4,7 @@ import CommandContext from "slash-create/lib/context";
 import {GamblingColor} from "../../Handlers/Gambling/Gambling";
 import User from "../../Models/User/User";
 import {UserInstance} from "../../Models/User/UserInstance";
-import {guild, guildId} from "../../Util/Bot";
+import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, percentOf} from "../../Util/Formatter";
 import {getRandomPercentage} from "../../Util/Random";
 
@@ -105,6 +105,12 @@ export default class Invest extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
+		const gambleChannel = getChannel('gambling');
+
+		if (ctx.channelID !== gambleChannel?.id) {
+			return `You can only use /invest commands in the ${gambleChannel.toString()} channel.`;
+		}
+
 		const user = await User.get(ctx.user.id);
 
 		if (ctx.subcommands.includes('add_percent') || ctx.subcommands.includes('add_amount')) {

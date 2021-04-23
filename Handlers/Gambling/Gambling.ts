@@ -51,7 +51,7 @@ export class Gambling extends GamblingInstance {
 		winners         : [],
 		losers          : [],
 		color           : null,
-		botTookWinnings : false
+		botTookWinnings : false,
 	};
 
 	private _betMessage: Message = null;
@@ -99,14 +99,14 @@ export class Gambling extends GamblingInstance {
 		if (isValid !== InvalidNumberResponse.IS_VALID) {
 			return {
 				message : isValid,
-				joined  : false
+				joined  : false,
 			};
 		}
 
 		if (!user.balanceManager().hasBalance(amount)) {
 			return {
 				joined  : false,
-				message : 'You do not have enough money to do this.'
+				message : 'You do not have enough money to do this.',
 			};
 		}
 
@@ -126,7 +126,7 @@ export class Gambling extends GamblingInstance {
 		if (numbro(amount).value() < minimumBet) {
 			return {
 				joined  : false,
-				message : `You need to place a bet of at least $${minimumBet}`,
+				message : `You need to place a bet of at least ${minimumBet}.`,
 			};
 		}
 
@@ -141,7 +141,7 @@ export class Gambling extends GamblingInstance {
 			amount       : amount,
 			balanceType  : "balance",
 			typeOfChange : "removed",
-			reason       : `Placed a bet`
+			reason       : `Placed a bet`,
 		});
 		await user.save();
 
@@ -197,7 +197,7 @@ export class Gambling extends GamblingInstance {
 				color   : this._winningColor,
 				amount  : String(botAmount),
 				takings : String(botAmount),
-				user    : botUser
+				user    : botUser,
 			});
 
 			this._endingInformation.botTookWinnings = true;
@@ -239,7 +239,7 @@ export class Gambling extends GamblingInstance {
 				amount       : winner.takings,
 				balanceType  : "balance",
 				typeOfChange : "added",
-				reason       : `Won a bet`
+				reason       : `Won a bet`,
 			});
 			await winner.user.save();
 
@@ -285,7 +285,7 @@ export class Gambling extends GamblingInstance {
 			bettingInfo.addField('Winning Color: ', GamblingColor[this._winningColor].toUpperCase(), true);
 
 			let winners: string[] | string = this._endingInformation.winners.map(
-				b => `- <@!${b.user.id}> | ${formatMoney(b.takings)}`
+				b => `- <@!${b.user.id}> | ${formatMoney(b.takings)}`,
 			);
 
 			winners = (winners.length ? winners.join('\n') : 'No winners');
@@ -347,7 +347,7 @@ export class Gambling extends GamblingInstance {
 	 */
 	private formatBettersForMessage(color: GamblingColor) {
 		const betters = this.bettersForColor(color).map(
-			b => `- <@!${b.user.id}> | ${formatMoney(b.amount)}`
+			b => `- <@!${b.user.id}> | ${formatMoney(b.amount)}`,
 		);
 
 		if (!betters.length) {
@@ -440,7 +440,7 @@ export class Gambling extends GamblingInstance {
 			return amount;
 		}
 
-		return numbro(existingBet.amount).add(numbro(amount).value()).format();
+		return formatMoney(numbro(existingBet.amount).add(numbro(amount).value()));
 	}
 
 }
