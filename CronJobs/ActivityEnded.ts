@@ -1,4 +1,4 @@
-import {Log} from "@envuso/common";
+//import {Log} from "@envuso/common";
 import CronJob from "../Handlers/CronJob/CronJob";
 import {ActivityName} from "../Models/User/Activities";
 import User from "../Models/User/User";
@@ -24,7 +24,7 @@ export default class ActivityEnded extends CronJob {
 					continue;
 				}
 
-				Log.info(`Random event "${event.name}" for ${user.displayName}`);
+//				Log.info(`Random event "${event.name}" for ${user.displayName}`);
 
 				await handler.handleRandomEvent(user, event);
 			}
