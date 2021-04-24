@@ -3,6 +3,7 @@ import {createCanvas, loadImage} from 'canvas';
 import {MessageAttachment, TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
+import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
 import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney} from "../../Util/Formatter";
@@ -130,7 +131,11 @@ export default class Leaderboard extends SlashCommand {
 					userContext.closePath();
 					userContext.clip();
 
-					const avatar = await loadImage(user.avatar);
+					const avatar = await loadImage(
+						user.avatar === null
+							? DiscordJsManager.client().user.avatarURL({format : "png"})
+							: user.avatar
+					);
 					userContext.drawImage(avatar, 10, 10, 30, 30);
 					userContext.restore();
 
@@ -160,7 +165,7 @@ export default class Leaderboard extends SlashCommand {
 
 
 			await channel.send('', new MessageAttachment(canvas.toBuffer(), 'leaderboard.jpeg'));
-		} catch(error){
+		} catch (error) {
 			Log.error(error.toString());
 			console.trace(error);
 		}
