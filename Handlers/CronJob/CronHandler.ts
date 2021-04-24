@@ -60,7 +60,7 @@ export default class CronHandler {
 
 	private loadCrons() {
 		const cronJobs: { [key: string]: any } = require('require-all')({
-			dirname   : path.join(process.cwd(), 'CronJobs'),
+			dirname   : path.join(__dirname, '..', '..', 'CronJobs'),
 			recursive : true,
 			filter    : /^(.+)\.(j|t)s$/,
 			resolve   : function (Handler) {
