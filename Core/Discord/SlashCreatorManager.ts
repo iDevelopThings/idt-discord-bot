@@ -20,9 +20,9 @@ export default class SlashCreatorManager {
 
 	boot() {
 		this._creator = new SlashCreator({
-			applicationID : process.env.APPLICATION_ID,
-			//	publicKey     : process.env.CLIENT_PUBLIC_KEY,
-			token : process.env.BOT_TOKEN,
+			applicationID         : process.env.APPLICATION_ID,
+			token                 : process.env.BOT_TOKEN,
+			maxSignatureTimestamp : 10000
 		});
 
 		this._creator.on('debug', (message) => Log.info('debug: ' + message));
