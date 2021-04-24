@@ -1,7 +1,10 @@
+import {Decimal128} from "mongodb";
 import Investment from "../../Handlers/Investment";
 import {formatMoney, numbro} from "../../Util/Formatter";
+import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import User from "./User";
-import {IBalanceHistory, IBalances} from './UserInformationInterfaces';
+import {IBalanceHistory, IBalances, BalanceHistoryChangeType} from './UserInformationInterfaces';
+
 
 export default class Balance {
 
@@ -15,42 +18,46 @@ export default class Balance {
 		if (this.hasBalance('1', 'balance')) {
 			return 'balance';
 		}
+
 		if (this.hasBalance('1', 'invested')) {
 			return 'invested';
 		}
 	}
 
-	hasBalance(amount: string, type: keyof IBalances = 'balance') {
+	hasBalance(amount: SomeFuckingValue, type: keyof IBalances = 'balance') {
+		amount = NumberInput.someFuckingValueToString(amount);
+
 		return numbro(this.user.balances[type]).value() >= numbro(amount).value();
 	}
 
-	deductFromBalance(amount: string, type: keyof IBalances = 'balance') {
-		const finalAmount = numbro(this.user.balances[type])
-			.subtract(numbro(amount).value())
-			.value();
+	deductFromBalance(amount: SomeFuckingValue, reason: string, type: keyof IBalances = 'balance') {
+		amount = NumberInput.someFuckingValueToString(amount);
 
-		if (Number.isNaN(finalAmount)) {
-			this.user.balances[type] = '0';
-			return;
-		}
+		this.user.queuedBuilder().decrement(`balances.${type}`, amount);
 
-		if (finalAmount < 0) {
-			this.user.balances[type] = '0';
-		} else {
-			this.user.balances[type] = String(finalAmount);
-		}
+		this.changed({
+			amount,
+			balanceType  : type,
+			typeOfChange : BalanceHistoryChangeType.REMOVED,
+			reason,
+		});
+
+		return this.user;
 	}
 
-	addToBalance(amount: string, type: keyof IBalances = 'balance') {
-		if (Number(amount) < 0) {
-			throw new Error('You cannot add a minus to the balance');
-		}
+	addToBalance(amount: SomeFuckingValue, reason: string, type: keyof IBalances = 'balance') {
+		amount = NumberInput.someFuckingValueToString(amount);
 
-		const finalAmount = numbro(this.user.balances[type])
-			.add(numbro(amount).value())
-			.value();
+		this.user.queuedBuilder().increment(`balances.${type}`, amount);
 
-		this.user.balances[type] = String(finalAmount);
+		this.changed({
+			amount,
+			balanceType  : type,
+			typeOfChange : BalanceHistoryChangeType.ADDED,
+			reason,
+		});
+
+		return this.user;
 	}
 
 	/**
@@ -75,36 +82,50 @@ export default class Balance {
 	}
 
 	/**
-	 * Store a balance change history log
-	 * This is so we can track what happened/view a users change history
 	 *
 	 * @param {IBalanceHistory} history
+	 * @returns {Promise<boolean>}
 	 */
 	changed(history: IBalanceHistory) {
-		this.user.balanceHistory.push(history);
+		if (!(history.amount instanceof Decimal128)) {
+			history.amount = Decimal128.fromString(history.amount.toString());
+		}
+
+		return this.user.queryBuilder()
+			.push<IBalanceHistory>('balanceHistory', history);
 	}
 
 	/**
 	 * Claim investment money, used by the bot every 30m
 	 * automatically & by the /investment claim command
 	 *
-	 * @returns {Promise<void>}
+	 * @returns {Promise<{number: number}>}
 	 */
 	async claimInvestment() {
-		const income = this.user.balanceManager().income();
+		const income = this.income().toString();
 
-		this.user.balanceManager().addToBalance(String(income));
-		this.user.balanceManager().changed({
-			amount       : String(income),
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Claimed investment income`
-		});
-		await this.user.save();
+		this.addToBalance(income, 'Claimed investment income');
 
-		await this.user.cooldownManager().setUsed('claim');
+		this.user.cooldownManager().setUsed('claim');
+
+		await this.user.executeQueued();
 
 		return {income};
 	}
+
+	handleMostInvested(amount: string) {
+		const amountValue = numbro(amount).value();
+		const currentMost = numbro(this.user.statistics.balance.mostInvested).value();
+
+		if (amountValue < currentMost) {
+			return;
+		}
+
+		this.user.queuedBuilder().increment(
+			`statistics.balance.mostInvested`, String(amountValue - currentMost)
+		);
+	}
+
+
 
 }

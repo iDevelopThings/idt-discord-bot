@@ -17,6 +17,12 @@ export const getChannel = (channel: string): TextChannel => {
 	) as TextChannel;
 };
 
+export const getChannelById = (id: string) => {
+	return DiscordJsManager.client().channels.cache.find(
+		(c: TextChannel) => c.isText() && c.id === id
+	) as TextChannel;
+};
+
 
 export const findInManager = <T>(
 	cache: (keyof Guild),

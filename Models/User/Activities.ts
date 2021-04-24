@@ -30,12 +30,16 @@ export default class Activities {
 		return dayjs().isAfter(this.get(name).endsAt);
 	}
 
-	public async setStarted(name: ActivityName, activityHandler: IllegalActivity) {
-		this.user.activities[name] = {
-			name   : name,
-			endsAt : dayjs().add(activityHandler.runsFor()).toDate()
-		};
-		await this.user.save();
+	public setStarted(name: ActivityName, activityHandler: IllegalActivity) {
+		this.user.queuedBuilder()
+			.set({
+				[`activities.${name}`] : {
+					name   : name,
+					endsAt : dayjs().add(activityHandler.runsFor()).toDate()
+				}
+			});
+
+		return this.user;
 	}
 
 	public handlerForActivity(name: ActivityName) {
@@ -45,5 +49,9 @@ export default class Activities {
 			default:
 				return undefined;
 		}
+	}
+
+	public removeActivity(activity: ActivityName) {
+		this.user.queuedBuilder().unset(`activities.${activity}`);
 	}
 }

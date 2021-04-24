@@ -1,6 +1,6 @@
-import DiscordJsManager from "../../../Core/Discord/DiscordJsManager";
-import User from "../../../Models/User/User";
-import CronJob from "../CronJob";
+import DiscordJsManager from "../Core/Discord/DiscordJsManager";
+import User from "../Models/User/User";
+import CronJob from "../Handlers/CronJob/CronJob";
 
 export default class BotClaimInvestment extends CronJob {
 

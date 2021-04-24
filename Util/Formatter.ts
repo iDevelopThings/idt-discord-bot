@@ -52,7 +52,7 @@ export const formatPercentage = (i) => {
 	});
 };
 
-export const percentOf = (i, percent: string) => {
+export const percentOf = (i, percent: string): string => {
 	percent = numbroParse(percent, {base : "decimal", output : "percent"});
 	return numbro(i).multiply(Number(percent)).value().toString();
 };
@@ -75,11 +75,11 @@ export const isValidNumber = (amount: string, balanceManager?: Balance): Invalid
 		return InvalidNumberResponse.INVALID_AMOUNT;
 	}
 
-	if (balanceManager) {
-		if (!balanceManager.hasBalance(amount)) {
-			return InvalidNumberResponse.NOT_ENOUGH_BALANCE + ` You need ${formatMoney(amount, true)}.`;
-		}
-	}
+//	if (balanceManager) {
+//		if (!balanceManager.hasBalance(numbro(amount).value())) {
+//			return InvalidNumberResponse.NOT_ENOUGH_BALANCE + ` You need ${formatMoney(amount, true)}.`;
+//		}
+//	}
 
 	return InvalidNumberResponse.IS_VALID;
 };

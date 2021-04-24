@@ -71,12 +71,14 @@ export default class Preferences extends SlashCommand {
 			}
 
 			for (let allowedSetting of allowedSettings) {
-				user.preferences[allowedSetting] = !user.preferences[allowedSetting];
-				output += `- ${user.preferences[allowedSetting] ? 'Enabled' : 'Disabled'} bot dm messages \n`;
+				user.queuedBuilder().set({
+					[`preferences.${allowedSetting}`] : !user.preferences[allowedSetting]
+				});
 
+				output += `- ${user.preferences[allowedSetting] ? 'Enabled' : 'Disabled'} bot dm messages \n`;
 			}
 
-			await user.save();
+			await user.executeQueued();
 		}
 
 		return output;

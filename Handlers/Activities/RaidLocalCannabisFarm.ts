@@ -1,8 +1,10 @@
 import {Duration} from "dayjs/plugin/duration";
 import {ActivityName} from "../../Models/User/Activities";
+import {SkillRequirements} from "../../Models/User/Skills";
 import {createDuration} from "../../Util/Date";
-import {Numbro, numbro} from "../../Util/Formatter";
-import IllegalActivity, {RandomEvent, SkillRequirement} from "./IllegalActivity";
+import {formatMoney, Numbro, numbro} from "../../Util/Formatter";
+import {getRandomInt} from "../../Util/Random";
+import IllegalActivity, {RandomEventNames, RandomEvents, SuccessfulResponse} from "./IllegalActivity";
 
 export default class RaidLocalCannabisFarm extends IllegalActivity {
 
@@ -10,32 +12,54 @@ export default class RaidLocalCannabisFarm extends IllegalActivity {
 		return 'raid_local_cannabis';
 	}
 
-	public levelRequirement(): SkillRequirement | null {
-		return {
-			skill : 'hacking',
-			level : 5
-		};
+	public levelRequirements(): SkillRequirements {
+		return [
+			{
+				skill : 'hacking',
+				level : 5
+			}
+		];
 	}
 
-	public randomEvents(): RandomEvent | null {
-		return {
-			cops : {
-				chance  : 15,
-				message : 'Someone saw you sneak inside and called the cops.... busted.'
+	public randomEvents(): RandomEvents {
+		return [
+			{
+				name               : RandomEventNames.COPS,
+				chance             : 15,
+				message            : 'Someone saw you sneak inside and called the cops.... busted.',
+				additionalHandling : async (price) => {
+					return `**It cost you ${formatMoney(price)} to bail out of jail... damn, sucks to suck. **`;
+				}
 			}
-		};
+		];
 	}
 
 	public runsFor(): Duration {
-		return createDuration(30, 'seconds');
+		return createDuration(10, 'minutes');
 	}
 
 	public startingCost(): Numbro {
 		return numbro('10000');
 	}
 
-	public successChance(): { min: number; max: number } {
-		return {max : 50, min : 70};
+	public async getMessageAndBalanceGain(): Promise<SuccessfulResponse> {
+		let randomPlantsNumber = getRandomInt(10, 30);
+		if (randomPlantsNumber > 20) {
+			randomPlantsNumber = getRandomInt(25, 60);
+		}
+		const costForPlants = randomPlantsNumber * getRandomInt(200, 500);
+
+		let message = `You just about got away, the owner came for your ass. You stole ${randomPlantsNumber} plants, they're worth a total of ${formatMoney(costForPlants)}`;
+
+		if (randomPlantsNumber > 25) {
+			message = `You managed to get away with the raid... You got extremely lucky stole ${randomPlantsNumber} plants, they're worth a total of ${formatMoney(costForPlants)}`;
+		}
+
+		return {
+			message     : message,
+			moneyGained : costForPlants
+		};
+
 	}
 
 }

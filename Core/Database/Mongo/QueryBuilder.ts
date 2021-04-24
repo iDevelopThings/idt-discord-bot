@@ -1,4 +1,4 @@
-import {Cursor, FilterQuery, FindOneOptions, UpdateManyOptions, UpdateQuery, WithoutProjection} from "mongodb";
+import {Cursor, Decimal128, FilterQuery, FindOneOptions, PushOperator, UpdateManyOptions, UpdateQuery, WithoutProjection} from "mongodb";
 import {ClassType, Ref} from "../index";
 import {hydrateModel} from "../Serialization/Serializer";
 import Model from "./Model";
@@ -20,7 +20,22 @@ export class QueryBuilder<T> {
 
 	private _model: Model<T>;
 
-	private _collectionFilter: object = null;
+	private _collectionFilter: object = {};
+
+	// $max
+	private _collectionMax: object = {};
+
+	// $set
+	private _collectionSet: object = {};
+
+	// $unset
+	private _collectionUnset: object = {};
+
+	// $inc
+	private _collectionIncrement: object = {};
+
+	// $push
+	private _collectionPush: Map<string, object[]> = new Map<string, object[]>();
 
 	private _collectionAggregation: object[] = [];
 
@@ -111,6 +126,87 @@ export class QueryBuilder<T> {
 	}
 
 	/**
+	 * Add values to be $set
+	 *
+	 * @param {Partial<T>} values
+	 * @returns {this<T>}
+	 */
+	set(values: Partial<T>) {
+		this._collectionSet = {...this._collectionSet, ...values};
+
+		return this;
+	}
+
+	/**
+	 * Add a key to be removed from the document
+	 *
+	 * @returns {this<T>}
+	 * @param key
+	 */
+	unset(key: string) {
+		this._collectionUnset = {...this._collectionUnset, ...{[key] : ""}};
+
+		return this;
+	}
+
+	/**
+	 * key/value to use with $max
+	 *
+	 * @param {string} key
+	 * @param value
+	 * @returns {this<T>}
+	 */
+	max(key: string, value: any) {
+		this._collectionMax = {...this._collectionMax, ...{[key] : value}};
+
+		return this;
+	}
+
+	/**
+	 * Allows us to add a $inc operation which is applied to the update call.
+	 *
+	 * @param {string} key
+	 * @param {string} amount
+	 * @return {this<T>}
+	 */
+	increment(key: string, amount: string) {
+		this._collectionIncrement[key] = Decimal128.fromString(amount.toString());
+
+		return this;
+	}
+
+	/**
+	 * Allows us to add a $inc operation which is applied to the update call.
+	 * Automatically inverts the amount passed in so it decrements the value.
+	 *
+	 * @param {string} key
+	 * @param {string} amount
+	 * @return {this<T>}
+	 */
+	decrement(key: string, amount: string) {
+		this._collectionIncrement[key] = Decimal128.fromString(`-${amount.toString()}`);
+
+		return this;
+	}
+
+	/**
+	 * Used for the $push operation... Not sure what else to explain 😅
+	 *
+	 * @param {string} key
+	 * @param {T} obj
+	 * @return {this<T>}
+	 */
+	push<T>(key: string, obj: T) {
+		if (!this._collectionPush.has(key)) {
+			this._collectionPush.set(key, []);
+		}
+
+		this._collectionPush.get(key).push(obj as any);
+
+		return this;
+	}
+
+	/**
 	 * When a filter has been specified with where(). It will apply to
 	 * {@see _collectionFilter} then when we make other calls, like
 	 * .get(), .first() or .count() it will resolve the cursor
@@ -154,6 +250,8 @@ export class QueryBuilder<T> {
 
 		const result = await this._builderResult.limit(1).next();
 
+		this.reset();
+
 		if (!result) return null;
 
 		return hydrateModel(result, this._model.constructor as any);
@@ -163,9 +261,10 @@ export class QueryBuilder<T> {
 	 * Get all items from the collection that match the query
 	 */
 	async get() {
-		const cursor = await this.resolveFilter();
-
+		const cursor  = await this.resolveFilter();
 		const results = await cursor.toArray();
+
+		this.reset();
 
 		return results.map(
 			result => hydrateModel(result, this._model.constructor as unknown as ClassType<T>)
@@ -181,17 +280,20 @@ export class QueryBuilder<T> {
 	 * @param options
 	 * @return boolean | UpdateWriteOpResult
 	 */
-	public async update(attributes: UpdateQuery<T> | Partial<T>, options?: UpdateManyOptions & { returnMongoResponse: boolean }) {
+	public async update(attributes: UpdateQuery<T> | Partial<T> = {}, options?: UpdateManyOptions & { returnMongoResponse: boolean }) {
+		const query = this.buildUpdateQuery(attributes);
 
-		attributes['$currentDate']
-			? (attributes['$currentDate'].updatedAt = true)
-			: attributes['$currentDate'] = {updatedAt : true};
+		if (query === null) {
+			return false;
+		}
 
 		const response = await this._model.collection().updateMany(
 			this._collectionFilter,
-			attributes,
+			query,
 			options
 		);
+
+		this.reset();
 
 		if (options?.returnMongoResponse) {
 			return response;
@@ -219,5 +321,97 @@ export class QueryBuilder<T> {
 		return this._model.collection().countDocuments(this._collectionFilter);
 	}
 
+	/*
+	 Private Shit
+	 */
 
+	/**
+	 * Build an update operation based on the varies calls to increment/push/update etc...
+	 *
+	 * @param {UpdateQuery<T>} query
+	 * @return {UpdateQuery<T>>}
+	 * @private
+	 */
+	private buildUpdateQuery(query: UpdateQuery<T>) {
+		const operation: UpdateQuery<T> = {
+			$max   : Object.assign({}, this._collectionMax, query.$max),
+			$set   : Object.assign({}, this._collectionSet, query.$set),
+			$unset : Object.assign({}, this._collectionUnset, query.$unset),
+			$inc   : Object.assign({}, this._collectionIncrement, query.$inc),
+			$push  : this.buildPushOperation(query.$push)
+		};
+
+		// Cleanup the query a little
+		for (const key in operation) {
+			if (operation[key] === undefined || operation[key] === null) {
+				delete operation[key];
+				continue;
+			}
+
+			if (Array.isArray(operation[key]) && operation[key].length === 0) {
+				delete operation[key];
+			}
+
+			if (typeof operation[key] === 'object' && Object.keys(operation[key]).length === 0) {
+				delete operation[key];
+			}
+		}
+
+		if (Object.keys(operation).length === 0) {
+			return null;
+		}
+
+		operation['$currentDate'] = Object.assign({}, query.$currentDate, {updatedAt : true});
+
+		return operation;
+	}
+
+	/**
+	 * Combines $push operation from the update call with the individual calls o `QueryBuilder.push`
+	 *
+	 * @param {PushOperator<T>} push
+	 * @return {{}}
+	 * @private
+	 */
+	private buildPushOperation(push: PushOperator<T> = {}) {
+		const op = {};
+
+		for (const key in push) {
+			op[key] = push[key];
+		}
+
+		for (const [key, obj] of this._collectionPush) {
+			if (obj.length === 0) {
+				continue;
+			}
+
+			if (op.hasOwnProperty(key)) {
+				if (!op[key].hasOwnProperty('$each')) {
+					op[key] = {
+						$each : [op[key]]
+					};
+				}
+
+				op[key].$each.push(...obj);
+				continue;
+			}
+
+			op[key] = {
+				$each : obj
+			};
+		}
+
+		return op;
+	}
+
+	private reset() {
+		this._collectionFilter    = {};
+		this._collectionSet       = {};
+		this._collectionUnset     = {};
+		this._collectionIncrement = {};
+		this._collectionMax       = {};
+		this._collectionPush.clear();
+		this._collectionAggregation = [];
+		this._collectionOrder       = null;
+	}
 }

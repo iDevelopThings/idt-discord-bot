@@ -11,7 +11,7 @@ export const TimeStates = {
 	claim              : createDuration(30, 'minutes'),
 	withdrawInvestment : createDuration(30, 'minutes'),
 	botHack            : createDuration(60, 'minutes'),
-	userHack            : createDuration(15, 'minutes'),
+	userHack           : createDuration(15, 'minutes'),
 };
 
 export type TimeStateName = keyof (typeof TimeStates);
@@ -20,9 +20,10 @@ export default class Cooldown {
 
 	constructor(private user: User) {}
 
-	async setUsed(state: TimeStateName) {
-		this.user.cooldowns[state] = dayjs().add(TimeStates[state]).format();
-		await this.user.save();
+	setUsed(state: TimeStateName) {
+		this.user.queuedBuilder().set({
+			[`cooldowns.${state}`] : dayjs().add(TimeStates[state]).format()
+		});
 	}
 
 	canUse(state: TimeStateName) {

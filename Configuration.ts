@@ -16,4 +16,6 @@ export default {
 			useUnifiedTopology : true
 		}
 	} as MongoConnectionConfiguration,
+
+	cronJobRate : 60 * 1000
 };

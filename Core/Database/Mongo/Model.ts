@@ -37,7 +37,16 @@ export default class Model<M> {
 	 * Get the query builder instance
 	 */
 	queryBuilder(): QueryBuilder<M> {
+		//		return new QueryBuilder<M>(this);
 		return this._queryBuilder;
+	}
+
+	queuedBuilder(): QueryBuilder<M> {
+		return this._queryBuilder.where<M>({_id : (this as any)._id});
+	}
+
+	executeQueued() {
+		return this.queuedBuilder().update();
 	}
 
 	/**
@@ -96,10 +105,6 @@ export default class Model<M> {
 		attributesToSet.$set = plain;
 
 		await this.collection().updateOne({_id : (this as any)._id}, attributesToSet);
-
-		//		await this.collection().replaceOne({
-		//			_id : (this as any)._id,
-		//		}, plain as any, options);
 
 		for (let attributesKey in attributes) {
 			(this as any)[attributesKey] = attributes[attributesKey];

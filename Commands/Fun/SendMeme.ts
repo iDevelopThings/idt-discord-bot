@@ -1,9 +1,9 @@
 import {TextChannel} from "discord.js";
-import { SlashCommand} from "slash-create";
+import {SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import MemeApi from "../../Handlers/MemeApi";
 import Meme from "../../Models/Meme";
-import {guild, guildId} from "../../Util/Bot";
+import {getChannel, guild, guildId} from "../../Util/Bot";
 
 export default class SendMeme extends SlashCommand {
 
@@ -20,16 +20,15 @@ export default class SendMeme extends SlashCommand {
 
 	async run(ctx: CommandContext) {
 
-		const channel      = guild().channels.cache.get(ctx.channelID);
-		const memesChannel = guild().channels.cache.find(c => c.name === 'memes');
+		const memesChannel = getChannel('memes');
 
-		if (!channel.equals(memesChannel)) {
+		if (ctx.channelID !== memesChannel.id) {
 			return `You can only use this command in the ${memesChannel.toString()} channel.`;
 		}
 
 		const meme = await MemeApi.getMeme(false);
 
-		if(await Meme.exists(meme.url)){
+		if (await Meme.exists(meme.url)) {
 			await meme.regenerate();
 		} else {
 			await Meme.create<Meme>(meme);
@@ -37,9 +36,9 @@ export default class SendMeme extends SlashCommand {
 
 		await ctx.send('Your meme is coming good sir');
 
-		await (channel as TextChannel).send({
+		await memesChannel.send({
 			content : meme.isNsfw() ? '**This content is NSFW**' : '',
-			files       : [
+			files   : [
 				{
 					attachment : meme.url,
 					name       : meme.isNsfw() ? 'SPOILER_FILE.jpg' : 'meme.jpg'

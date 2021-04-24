@@ -3,10 +3,10 @@ import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
 import {getChannel, guild, guildId} from "../../Util/Bot";
-import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
+import {formatMoney, InvalidNumberResponse, isValidNumber, numbroParse} from "../../Util/Formatter";
+import NumberInput from "../../Util/NumberInput";
 
 export default class Balance extends SlashCommand {
-
 	constructor(creator) {
 		super(creator, {
 			deferEphemeral : true,
@@ -69,7 +69,6 @@ export default class Balance extends SlashCommand {
 		this.filePath = __filename;
 	}
 
-
 	async run(ctx: CommandContext) {
 		const gambleChannel = getChannel('gambling');
 
@@ -84,17 +83,14 @@ export default class Balance extends SlashCommand {
 		}
 
 		if (ctx.subcommands.includes('user')) {
-
 			const userObj = ctx.options.user as { user: string };
-
-			const user = await User.getOrCreate(userObj.user);
+			const user    = await User.getOrCreate(userObj.user);
 
 			return await this.handleBalanceOutput(ctx, user);
 		}
 
 		if (ctx.subcommands.includes('gift')) {
-			const options = ctx.options.gift as { user: string; amount: string; };
-
+			const options     = ctx.options.gift as { user: string; amount: string; };
 			const otherUser   = await User.getOrCreate(options.user);
 			const currentUser = await User.getOrCreate(ctx.user.id);
 
@@ -106,7 +102,6 @@ export default class Balance extends SlashCommand {
 
 			return await this.handleHistory(ctx, options.user);
 		}
-
 
 		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get";
 	}
@@ -132,23 +127,19 @@ export default class Balance extends SlashCommand {
 			return isValid;
 		}
 
-		currentUser.balanceManager().deductFromBalance(amount);
-		currentUser.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "balance",
-			typeOfChange : "removed",
-			reason       : `Gifted money to ${otherUser.username}`
-		});
-		await currentUser.save();
+		const input = new NumberInput(amount, currentUser).parse();
 
-		otherUser.balanceManager().addToBalance(amount);
-		otherUser.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Gifted by ${currentUser.username}`
-		});
-		await otherUser.save();
+		if (!input.isValid()) {
+			return input.error();
+		}
+
+
+		currentUser.balanceManager().deductFromBalance(input.value(), `Gifted money to ${otherUser.username}`);
+		await currentUser.executeQueued();
+
+		otherUser.balanceManager().addToBalance(input.value(), `Gifted by ${currentUser.username}`);
+		await otherUser.executeQueued();
+
 
 		return `You gave ${otherUser.toString()} ${formatMoney(amount)}`;
 	}
@@ -172,8 +163,9 @@ export default class Balance extends SlashCommand {
 			for (let i = 0; i < balanceHistory.length; i++) {
 				const history = balanceHistory[i];
 
+				const typeOfChange = history.typeOfChange === 'added' ? 'to' : 'from';
 				embed.addField(
-					`#${user.balanceHistory.length - (balanceHistory.length - i - 1)} - ${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType}`,
+					`#${user.balanceHistory.length - (balanceHistory.length - i - 1)} - ${history.typeOfChange} ${formatMoney(history.amount)} ${typeOfChange} ${history.balanceType}`,
 					history.reason
 				);
 			}
