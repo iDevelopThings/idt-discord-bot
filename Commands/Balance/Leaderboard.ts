@@ -39,8 +39,11 @@ export default class Leaderboard extends SlashCommand {
 			return `You can only use /leaderboard commands in the ${gambleChannel.toString()} channel.`;
 		}
 
+
 		const type      = ctx.options.type as string;
 		const typeTitle = type.slice(0, 1).toUpperCase() + type.slice(1);
+
+		await ctx.send('Getting you the ' + typeTitle + ' leaderboard now...');
 
 		const dimensions = {width : 500, height : 500};
 
@@ -153,7 +156,6 @@ export default class Leaderboard extends SlashCommand {
 
 		const channel = guild().channels.resolve(ctx.channelID) as TextChannel;
 
-		await ctx.send('Here\'s the ' + typeTitle + ' leaderboard: ');
 
 		await channel.send('', new MessageAttachment(canvas.toBuffer(), 'leaderboard.jpeg'));
 	}
