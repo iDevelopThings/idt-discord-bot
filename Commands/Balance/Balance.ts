@@ -3,7 +3,8 @@ import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
 import {getChannel, guild, guildId} from "../../Util/Bot";
-import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
+import {formatMoney, InvalidNumberResponse, isValidNumber, numbroParse} from "../../Util/Formatter";
+import NumberInput from "../../Util/NumberInput";
 
 export default class Balance extends SlashCommand {
 
@@ -132,23 +133,19 @@ export default class Balance extends SlashCommand {
 			return isValid;
 		}
 
-		currentUser.balanceManager().deductFromBalance(amount);
-		currentUser.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "balance",
-			typeOfChange : "removed",
-			reason       : `Gifted money to ${otherUser.username}`
-		});
-		await currentUser.save();
+		const input = new NumberInput(amount, currentUser).parse();
 
-		otherUser.balanceManager().addToBalance(amount);
-		otherUser.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Gifted by ${currentUser.username}`
-		});
-		await otherUser.save();
+		if (!input.isValid()) {
+			return input.error();
+		}
+
+
+		currentUser.balanceManager().deductFromBalance(input.value(), `Gifted money to ${otherUser.username}`);
+		await currentUser.executeQueued();
+
+		otherUser.balanceManager().addToBalance(input.value(), `Gifted by ${currentUser.username}`);
+		await otherUser.executeQueued();
+
 
 		return `You gave ${otherUser.toString()} ${formatMoney(amount)}`;
 	}
@@ -172,8 +169,9 @@ export default class Balance extends SlashCommand {
 			for (let i = 0; i < balanceHistory.length; i++) {
 				const history = balanceHistory[i];
 
+				const typeOfChange = history.typeOfChange === 'added' ? 'to' : 'from';
 				embed.addField(
-					`#${user.balanceHistory.length - (balanceHistory.length - i - 1)} - ${history.typeOfChange} ${formatMoney(history.amount)} to ${history.balanceType}`,
+					`#${user.balanceHistory.length - (balanceHistory.length - i - 1)} - ${history.typeOfChange} ${formatMoney(history.amount)} ${typeOfChange} ${history.balanceType}`,
 					history.reason
 				);
 			}

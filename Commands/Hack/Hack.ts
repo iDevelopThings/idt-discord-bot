@@ -88,25 +88,10 @@ export default class Hack extends SlashCommand {
 				const stealPercentage = getRandomPercentage(1, getRandomInt(10, 40));
 				const stealAmount     = percentOf(user.balances[balanceAvailable], stealPercentage.toString());
 
-				user.balanceManager().deductFromBalance(stealAmount, balanceAvailable);
-				user.balanceManager().changed({
-					amount       : stealAmount,
-					balanceType  : balanceAvailable,
-					typeOfChange : "removed",
-					reason       : `Bot reversed hack`
-				});
-				await user.save();
+				user.balanceManager().deductFromBalance(stealAmount, 'Bot reversed hack', balanceAvailable);
+				bot.balanceManager().addToBalance(botAmount, `Reversed hack from ${user.username}`);
 
-				const botAmount = numbro(stealAmount).divide(2).value().toString();
-
-				bot.balanceManager().addToBalance(botAmount);
-				bot.balanceManager().changed({
-					amount       : botAmount,
-					balanceType  : "balance",
-					typeOfChange : "added",
-					reason       : `Reversed hack from ${user.username}`
-				});
-				await bot.save();
+				await Promise.all([user.executeQueued(), bot.executeQueued()]);
 
 				return `The bot reversed the hack and stole ${formatMoney(stealAmount)}(${formatPercentage(stealPercentage)}) from your ${balanceAvailable}`;
 			}
@@ -120,25 +105,11 @@ export default class Hack extends SlashCommand {
 		const xpForAmount = ((botBalance * 0.1) / hackLevel);
 		const xpGain      = Math.min(5_000, xpForAmount) + xpForLevel;
 
-		await user.skillManager().addXp('hacking', xpGain);
+		user.skillManager().addXp('hacking', xpGain);
+		user.balanceManager().addToBalance(botBalance.toString(), 'Successfully hacked bot');
+		bot.balanceManager().deductFromBalance(botBalance.toString(), `Got hacked by ${user.username}`);
 
-		user.balanceManager().addToBalance(botBalance.toString());
-		user.balanceManager().changed({
-			amount       : botBalance.toString(),
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Successfully hacked bot`
-		});
-		await user.save();
-
-		bot.balanceManager().deductFromBalance(botBalance.toString());
-		user.balanceManager().changed({
-			amount       : botBalance.toString(),
-			balanceType  : "balance",
-			typeOfChange : "removed",
-			reason       : `Got hacked by ${user.username}`
-		});
-		await bot.save();
+		await Promise.all([user.executeQueued(), bot.executeQueued()]);
 
 		return `You successfully hacked the bot for ${formatMoney(botBalance)} and gained ${formatXp(String(xpGain))} hacking xp.`;
 	}
@@ -169,30 +140,16 @@ export default class Hack extends SlashCommand {
 			return `You need more than ${formatMoney(stealAmountCost)} to hack ${otherUser.toString()}... This is all we could tell from the small information you got about their accessible information.`;
 		}
 
-		await user.cooldownManager().setUsed('userHack');
-
-		user.balanceManager().deductFromBalance(stealAmountCost);
-		user.balanceManager().changed({
-			amount       : stealAmountCost,
-			balanceType  : "balance",
-			typeOfChange : "removed",
-			reason       : `Cost for hacking ${otherUser.username}`
-		});
-		await user.save();
+		user.cooldownManager().setUsed('userHack');
+		user.balanceManager().deductFromBalance(stealAmountCost, `Cost for hacking ${otherUser.username}`);
 
 		if (getRandomInt(0, 3) !== 1) {
-			await user.skillManager().addXp('hacking', 15);
+			const amountGivenToOther = numbro(stealAmountCost).multiply(0.8).value();
 
+			user.skillManager().addXp('hacking', 15);
+			otherUser.balanceManager().addToBalance(amountGivenToOther.toString(), `Reversed hack from ${user.username}`);
 
-			const amountGivenToOther = numbro(stealAmountCost).multiply(0.8).value().toString();
-			otherUser.balanceManager().addToBalance(amountGivenToOther);
-			otherUser.balanceManager().changed({
-				amount       : amountGivenToOther,
-				balanceType  : "balance",
-				typeOfChange : "added",
-				reason       : `Reversed hack from ${user.username}`
-			});
-			await otherUser.save();
+			await Promise.all([user.executeQueued(), otherUser.executeQueued()]);
 
 			return `${otherUser.toString()} reversed the hack and stole ${formatMoney(amountGivenToOther)} from you.`;
 
@@ -204,25 +161,11 @@ export default class Hack extends SlashCommand {
 		const xpForAmount      = ((stealAmountForXp * 0.1) / hackLevel);
 		const xpGain           = Math.min(5_000, xpForAmount) + xpForLevel;
 
-		await user.skillManager().addXp('hacking', xpGain);
+		user.skillManager().addXp('hacking', xpGain);
+		user.balanceManager().addToBalance(stealAmount.toString(), `Hacked ${otherUser.username}`);
+		otherUser.balanceManager().deductFromBalance(stealAmount, `Hacked by ${user.username}`, typeToStealFromOther);
 
-		user.balanceManager().addToBalance(stealAmount);
-		user.balanceManager().changed({
-			amount       : stealAmount,
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Hacked ${otherUser.username}`
-		});
-		await user.save();
-
-		otherUser.balanceManager().deductFromBalance(stealAmount, typeToStealFromOther);
-		otherUser.balanceManager().changed({
-			amount       : stealAmount,
-			balanceType  : typeToStealFromOther,
-			typeOfChange : "removed",
-			reason       : `Hacked by ${user.username}`
-		});
-		await otherUser.save();
+		await Promise.all([user.executeQueued(), otherUser.executeQueued()]);
 
 		return `You successfully hacked ${otherUser.toString()} for ${formatMoney(stealAmount)} and gained ${formatXp(String(xpGain))} hacking xp.`;
 	}

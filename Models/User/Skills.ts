@@ -14,6 +14,13 @@ interface SkillInformation {
 	color: ColorResolvable;
 }
 
+export type SkillRequirementValues = {
+	skill: SkillName;
+	level: number;
+}
+
+export type SkillRequirements = SkillRequirementValues[];
+
 export const AvailableSkills = {
 	chatting  : {
 		title : 'Chatting',
@@ -103,21 +110,31 @@ export default class Skills {
 		this.user.skills[skill].xp += xp;
 		this.user.skills[skill].level = newLevel;
 
-		if (forceSave) {
-			await this.user.queryBuilder()
-				.where({_id : this.user._id})
-				.update({
-					$set : {
-						[`skills.${skill}.xp`]    : this.user.skills[skill].xp + xp,
-						[`skills.${skill}.level`] : newLevel
-					}
-				});
-		}
-
-		// if (forceSave)
-		// 	await this.user.save();
+		this.user.queuedBuilder()
+			.increment(`skills.${skill}.xp`, xp.toString())
+			.set({[`skills.${skill}.level`] : newLevel});
 	}
 
+	/**
+	 * Does the user have all levels required in the skills array?
+	 *
+	 * @param {SkillRequirements} requirements
+	 * @returns {{failedRequirements: SkillRequirementValues[], meetsRequirements: boolean}}
+	 */
+	hasLevels(requirements: SkillRequirements) {
+		const failedRequirements: SkillRequirements = [];
+
+		for (let requirement of requirements) {
+			if (!this.has(requirement.level, requirement.skill)) {
+				failedRequirements.push(requirement);
+			}
+		}
+
+		return {
+			meetsRequirements  : (!failedRequirements.length),
+			failedRequirements : failedRequirements
+		};
+	}
 
 	has(level: number, skill: SkillName) {
 		return this.user.skills[skill].level >= level;

@@ -1,5 +1,6 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
+import Skills, {AvailableSkills, SkillName} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
 import {guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
@@ -30,6 +31,34 @@ export default class Give extends SlashCommand {
 						{
 							name        : 'amount',
 							description : 'Amount to give',
+							type        : CommandOptionType.STRING,
+							required    : true,
+						}
+					]
+				},
+				{
+					name        : 'level',
+					description : 'Give a user a level',
+					type        : CommandOptionType.SUB_COMMAND,
+					options     : [
+						{
+							name        : 'user',
+							description : 'User to give a level to',
+							type        : CommandOptionType.USER,
+							required    : true,
+						},
+						{
+							name        : 'skill',
+							description : 'Skill to set',
+							type        : CommandOptionType.STRING,
+							required    : true,
+							choices     : Object.keys(AvailableSkills).map(
+								key => ({name : AvailableSkills[key].title, value : key})
+							)
+						},
+						{
+							name        : 'level',
+							description : 'Level to set',
 							type        : CommandOptionType.STRING,
 							required    : true,
 						}

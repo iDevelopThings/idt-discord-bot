@@ -22,6 +22,15 @@ export class QueryBuilder<T> {
 
 	private _collectionFilter: object = {};
 
+	// $max
+	private _collectionMax: object = {};
+
+	// $set
+	private _collectionSet: object = {};
+
+	// $unset
+	private _collectionUnset: object = {};
+
 	// $inc
 	private _collectionIncrement: object = {};
 
@@ -112,6 +121,43 @@ export class QueryBuilder<T> {
 			key       : String(key),
 			direction : 1
 		};
+
+		return this;
+	}
+
+	/**
+	 * Add values to be $set
+	 *
+	 * @param {Partial<T>} values
+	 * @returns {this<T>}
+	 */
+	set(values: Partial<T>) {
+		this._collectionSet = {...this._collectionSet, ...values};
+
+		return this;
+	}
+
+	/**
+	 * Add a key to be removed from the document
+	 *
+	 * @returns {this<T>}
+	 * @param key
+	 */
+	unset(key: string) {
+		this._collectionUnset = {...this._collectionUnset, ...{[key] : ""}};
+
+		return this;
+	}
+
+	/**
+	 * key/value to use with $max
+	 *
+	 * @param {string} key
+	 * @param value
+	 * @returns {this<T>}
+	 */
+	max(key: string, value: any) {
+		this._collectionMax = {...this._collectionMax, ...{[key] : value}};
 
 		return this;
 	}

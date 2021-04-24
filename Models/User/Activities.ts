@@ -46,4 +46,8 @@ export default class Activities {
 				return undefined;
 		}
 	}
+
+	public removeActivity(activity: ActivityName) {
+		this.user.queuedBuilder().unset(`activities.${activity}`);
+	}
 }

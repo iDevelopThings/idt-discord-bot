@@ -1,5 +1,6 @@
 import Investment from "../../Handlers/Investment";
 import {formatMoney, numbro} from "../../Util/Formatter";
+import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import User from "./User";
 import {IBalanceHistory, IBalances} from './UserInformationInterfaces';
 
@@ -20,8 +21,10 @@ export default class Balance {
 		}
 	}
 
-	hasBalance(amount: string, type: keyof IBalances = 'balance') {
-		return numbro(this.user.balances[type].toString()).value() >= numbro(amount).value();
+	hasBalance(amount: SomeFuckingValue, type: keyof IBalances = 'balance') {
+		amount = NumberInput.someFuckingValueToString(amount);
+
+		return numbro(this.user.balances[type]).value() >= numbro(amount).value();
 	}
 
 	deductFromBalance(amount: string, type: keyof IBalances = 'balance') {
@@ -99,5 +102,20 @@ export default class Balance {
 
 		return {income};
 	}
+
+	handleMostInvested(amount: string) {
+		const amountValue = numbro(amount).value();
+		const currentMost = numbro(this.user.statistics.balance.mostInvested).value();
+
+		if (amountValue < currentMost) {
+			return;
+		}
+
+		this.user.queuedBuilder().increment(
+			`statistics.balance.mostInvested`, String(amountValue - currentMost)
+		);
+	}
+
+
 
 }

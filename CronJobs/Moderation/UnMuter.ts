@@ -1,6 +1,6 @@
-import ModerationLog, {ModerationType} from "../../../../Models/Moderation/ModerationLog";
-import {ModerationLogInstance} from "../../../../Models/Moderation/ModerationLogInstance";
-import CronJob from "../../CronJob";
+import ModerationLog, {ModerationType} from "../../Models/Moderation/ModerationLog";
+import {ModerationLogInstance} from "../../Models/Moderation/ModerationLogInstance";
+import CronJob from "../../Handlers/CronJob/CronJob";
 
 export default class UnMuter extends CronJob {
 	handlerId = 'moderation/un-muter';

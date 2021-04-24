@@ -21,13 +21,9 @@ export default class Cooldown {
 	constructor(private user: User) {}
 
 	setUsed(state: TimeStateName) {
-		return this.user.queryBuilder()
-			.where({_id : this.user._id})
-			.update({
-				$set : {
-					[`cooldowns.${state}`] : dayjs().add(TimeStates[state]).format()
-				}
-			});
+		this.user.queuedBuilder().set({
+			[`cooldowns.${state}`] : dayjs().add(TimeStates[state]).format()
+		});
 	}
 
 	canUse(state: TimeStateName) {

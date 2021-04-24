@@ -1,4 +1,5 @@
 import {Log} from '@envuso/common';
+import Configuration from "../../Configuration";
 import CronJobInformation from "../../Models/CronJobInformation";
 import CronJob from './CronJob';
 import path from 'path';
@@ -15,7 +16,7 @@ export default class CronHandler {
 	async boot() {
 		await this.loadCrons();
 
-		this._tick = setInterval(this.run.bind(this), 60 * 1000);
+		this._tick = setInterval(this.run.bind(this), Configuration.cronJobRate);
 	}
 
 	async register(jobClass: typeof CronJob) {
@@ -59,7 +60,7 @@ export default class CronHandler {
 
 	private loadCrons() {
 		const cronJobs: { [key: string]: any } = require('require-all')({
-			dirname   : path.join(__dirname, 'Jobs'),
+			dirname   : path.join(process.cwd(), 'CronJobs'),
 			recursive : true,
 			filter    : /^(.+)\.(j|t)s$/,
 			resolve   : function (Handler) {

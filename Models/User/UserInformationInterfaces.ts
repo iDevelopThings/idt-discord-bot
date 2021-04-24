@@ -11,8 +11,8 @@ export interface IDiscordUserInformation {
 
 export interface IUserStatistics {
 	balance: {
-		mostInvested: string;
-		mostLostToTaxes: string;
+		mostInvested: string | number | Decimal128;
+		mostLostToTaxes: string | number | Decimal128;
 	};
 	gambling: {
 		totals: {

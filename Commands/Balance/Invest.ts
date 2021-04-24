@@ -1,10 +1,22 @@
-import {GuildMember, MessageReaction, TextChannel} from "discord.js";
+import {GuildMember, MessageReaction} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
-import {getChannel, guild, guildId} from "../../Util/Bot";
-import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, percentOf} from "../../Util/Formatter";
+import {StatisticsKeys} from "../../Models/User/UserInformationInterfaces";
+import {getChannel, getChannelById, guildId} from "../../Util/Bot";
+import {formatMoney, numbro} from "../../Util/Formatter";
+import NumberInput from "../../Util/NumberInput";
 import {getRandomPercentage} from "../../Util/Random";
+
+
+interface WithdrawOptions {
+	short?: {
+		percent: string;
+	},
+	input?: {
+		amount: string;
+	}
+}
 
 const THUMBS_UP   = '👍';
 const THUMBS_DOWN = '👎';
@@ -40,7 +52,7 @@ export default class Invest extends SlashCommand {
 							name        : 'amount',
 							description : 'The amount to add',
 							required    : true,
-							choices : [
+							choices     : [
 								{name : '100%', value : '100%'},
 								{name : '75%', value : '75%'},
 								{name : '50%', value : '50%'},
@@ -127,42 +139,22 @@ export default class Invest extends SlashCommand {
 
 	async addToInvestment(ctx: CommandContext, user: User) {
 
-		const isPercent = !!ctx.options?.add_percent;
-		const options: any    = ctx.options[isPercent ? 'add_percent' : 'add_amount'];
-		let amount: string       = String(options.amount);
+		const isPercent    = !!ctx.options?.add_percent;
+		const options: any = ctx.options[isPercent ? 'add_percent' : 'add_amount'];
 
-		if (isPercent) {
-			amount = percentOf(user.balances.balance, amount);
+		const input = new NumberInput(options.amount, user).parse();
+
+		if (!input.isValid()) {
+			return input.error();
 		}
 
-		const valid = isValidNumber(amount);
-		if (valid !== InvalidNumberResponse.IS_VALID) {
-			return valid;
-		}
+		const amount = input.value();
 
-		if (!user.balanceManager().hasBalance(amount)) {
-			return 'You dont have enough money in your balance.';
-		}
-
-		if (numbro(amount).value() > numbro(user.statistics.balance.mostInvested).value()) {
-			user.statistics.balance.mostInvested = amount;
-		}
-
-		user.balanceManager().deductFromBalance(amount);
-		user.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "balance",
-			typeOfChange : "removed",
-			reason       : `Removed from balance... Adding to investment`
-		});
-		user.balanceManager().addToBalance(amount, 'invested');
-		user.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "invested",
-			typeOfChange : "added",
-			reason       : `Added to investment`
-		});
-		await user.save();
+		user.updateStatistic(StatisticsKeys.MOST_INVESTED, amount);
+		user.balanceManager().deductFromBalance(amount, 'Removed from balance... Adding to investment');
+		user.balanceManager().addToBalance(amount, 'Added to investment from balance', 'invested');
+		user.skillManager().addXp('investing', 50);
+		await user.executeQueued();
 
 		return `${formatMoney(amount)} has been added to your investments.`;
 	}
@@ -179,33 +171,33 @@ export default class Invest extends SlashCommand {
 	}
 
 	private async withdraw(ctx: CommandContext, user: User) {
-		const channel       = guild().channels.cache.get(ctx.channelID) as TextChannel;
+		const channel       = getChannelById(ctx.channelID);
 		const randomPercent = getRandomPercentage(3, 30);
+		const options       = ctx.options.withdraw as WithdrawOptions;
 
-		interface options {
-			short?: {
-				percent: string;
-			},
-			input?: {
-				amount: string;
-			}
+		const input = new NumberInput(
+			options?.short?.percent ?? options?.input?.amount, user
+		).parse();
+
+		if (!input.isValid()) {
+			return input.error();
 		}
 
-		const options = ctx.options.withdraw as options;
+		const amount: string = input.value();
 
-		const amount = options?.short?.percent
-			? percentOf(user.balances.invested, options.short.percent)
-			: numbro(options.input.amount).value();
+		//		const amount = options?.short?.percent
+		//			? percentOf(user.balances.invested, options.short.percent)
+		//			: numbro(options.input.amount).value();
 
 
-		const valid = isValidNumber(String(amount));
-		if (valid !== InvalidNumberResponse.IS_VALID) {
-			return valid;
-		}
+		//		const valid = isValidNumber(String(amount));
+		//		if (valid !== InvalidNumberResponse.IS_VALID) {
+		//			return valid;
+		//		}
 
-		if (!user.balanceManager().hasBalance(String(amount), 'invested')) {
-			return `You do not have ${formatMoney(amount)} invested to withdraw`;
-		}
+		//		if (!user.balanceManager().hasBalance(amount, 'invested')) {
+		//			return `You do not have ${formatMoney(amount)} invested to withdraw`;
+		//		}
 
 		const loss = numbro(amount).multiply(randomPercent).value();
 
@@ -238,7 +230,10 @@ export default class Invest extends SlashCommand {
 
 		if (reaction.emoji.name === THUMBS_DOWN) {
 			await message.reactions.cache.each(r => r.remove());
-			await user.cooldownManager().setUsed('withdrawInvestment');
+
+			user.cooldownManager().setUsed('withdrawInvestment');
+			await user.executeQueued();
+
 			await ctx.editOriginal('You declined... you can use this again in 30 minutes.');
 			return;
 		}
@@ -249,21 +244,11 @@ export default class Invest extends SlashCommand {
 			user.statistics.balance.mostLostToTaxes = String(loss);
 		}
 
-		user.balanceManager().deductFromBalance(String(withdrawAmount + loss), 'invested');
-		user.balanceManager().changed({
-			amount       : String(withdrawAmount + loss),
-			balanceType  : "invested",
-			typeOfChange : "removed",
-			reason       : `Withdrawn from investment`
-		});
-		user.balanceManager().addToBalance(String(withdrawAmount));
-		user.balanceManager().changed({
-			amount       : String(withdrawAmount),
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Added to balance from withdrawn investment`
-		});
-		await user.save();
+		user.updateStatistic(StatisticsKeys.MOST_LOST_TO_TAXES, loss);
+		user.balanceManager().deductFromBalance(withdrawAmount + loss, 'Withdrawn from investment');
+		user.balanceManager().addToBalance(withdrawAmount, `Added to balance from withdrawn investment`);
+
+		await user.executeQueued();
 
 		await message.reactions.cache.each(r => r.remove());
 		await ctx.editOriginal(`You withdrawn ${formatMoney(withdrawAmount)} from your investment. You lost ${formatMoney(loss)} due to fluctuations in the market.`);

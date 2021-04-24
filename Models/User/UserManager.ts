@@ -1,4 +1,5 @@
 import {GuildMember} from "discord.js";
+import {Decimal128} from "mongodb";
 import {guild} from "../../Util/Bot";
 import User from "./User";
 import {IDiscordUserInformation, IUserStatistics} from "./UserInformationInterfaces";
@@ -75,16 +76,16 @@ export default class UserManager {
 			gambling : {
 				totals : {
 					count     : 0,
-					mostMoney : '0',
+					mostMoney : 0,
 				},
 				wins   : {
-					totalMoney : '0',
-					mostMoney  : '0',
+					totalMoney : 0,
+					mostMoney  : 0,
 					count      : 0,
 				},
 				losses : {
-					totalMoney : '0',
-					mostMoney  : '0',
+					totalMoney : 0,
+					mostMoney  : 0,
 					count      : 0,
 				},
 			},

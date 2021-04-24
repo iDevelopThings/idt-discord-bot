@@ -9,7 +9,7 @@ import DiscordJsManager from "./Core/Discord/DiscordJsManager";
 import {loadDiscordEventHandlers} from "./Core/Discord/EventHandlers";
 import SlashCreatorManager from "./Core/Discord/SlashCreatorManager";
 import {guild} from "./Util/Bot";
-import CronHandler from "./Util/Cron/CronHandler";
+import CronHandler from "./Handlers/CronJob/CronHandler";
 
 const cronHandler     = new CronHandler();
 const databaseManager = new DatabaseManager();

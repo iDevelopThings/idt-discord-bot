@@ -2,20 +2,21 @@ import {ColorResolvable, Message, MessageEmbed} from "discord.js";
 import {Decimal128} from "mongodb";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
-import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, Numbro} from "../../Util/Formatter";
+import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, Numbro, numbroParse} from "../../Util/Formatter";
+import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
 import {GamblingInstance, GamblingStatus} from "./GamblingInstance";
 import {GamblingInstanceType} from "./GamblingInstanceManager";
 
 interface Bet {
 	color: GamblingColor;
-	amount: string;
+	amount: SomeFuckingValue;
 	user: User;
 }
 
 interface EndingBet extends Bet {
-	takings?: string;
-	loss?: string;
+	takings?: SomeFuckingValue;
+	loss?: SomeFuckingValue;
 }
 
 export enum GamblingColor {
@@ -93,23 +94,25 @@ export class Gambling extends GamblingInstance {
 	 * @param {string} amount
 	 * @returns {Promise<{joined: boolean, message: string} | {joined: boolean, message: string} | {joined: boolean, message: string}>}
 	 */
-	async placeBet(user: User, color: GamblingColor, amount: string) {
+	async placeBet(user: User, color: GamblingColor, amount: SomeFuckingValue) {
 
-		const isValid = isValidNumber(amount);
-
-		if (isValid !== InvalidNumberResponse.IS_VALID) {
-			return {
-				message : isValid,
-				joined  : false,
-			};
-		}
-
-		if (!user.balanceManager().hasBalance(amount)) {
-			return {
-				joined  : false,
-				message : 'You do not have enough money to do this.',
-			};
-		}
+		//		const isValid = isValidNumber(amount);
+		//
+		//		if (isValid !== InvalidNumberResponse.IS_VALID) {
+		//			return {
+		//				message : isValid,
+		//				joined  : false,
+		//			};
+		//		}
+		//
+		//		let parsedAmount: number = numbroParse(amount);
+		//
+		//		if (!user.balanceManager().hasBalance(parsedAmount.toString())) {
+		//			return {
+		//				joined  : false,
+		//				message : 'You do not have enough money to do this.',
+		//			};
+		//		}
 
 		const existingBet = this.getUserBet(user);
 
@@ -120,11 +123,10 @@ export class Gambling extends GamblingInstance {
 			};
 		}
 
-		amount = this.getTotalBetAmount(user, amount);
+		const totalAmount = this.getTotalBetAmount(user, amount);
+		const minimumBet  = this.minimumBet();
 
-		const minimumBet = this.minimumBet();
-
-		if (numbro(amount).value() < minimumBet) {
+		if (amount < minimumBet) {
 			return {
 				joined  : false,
 				message : `You need to place a bet of at least ${minimumBet}.`,
@@ -132,18 +134,14 @@ export class Gambling extends GamblingInstance {
 		}
 
 		if (existingBet) {
-			existingBet.amount = amount;
+			existingBet.amount = totalAmount;
 		} else {
 			this._betters.push({color, user, amount});
 		}
 
-		await user.balanceManager().deductFromBalance(amount);
-		await user.balanceManager().changed({
-			amount       : amount,
-			balanceType  : "balance",
-			typeOfChange : "removed",
-			reason       : `Placed a bet`,
-		});
+		user.balanceManager().deductFromBalance(amount, 'Placed a bet');
+
+		await user.executeQueued();
 
 		// If we're the first person to place a bet, we'll start
 		// the countdown for other's to place bets.
@@ -170,7 +168,7 @@ export class Gambling extends GamblingInstance {
 		this._winningColor            = getRandomInt(0, 1);
 		this._endingInformation.color = this._winningColor;
 
-		let totalLooserAmount = numbro(0);
+		let totalLooserAmount = 0;
 
 		this._betters.forEach(bet => {
 			const type                 = bet.color === this._endingInformation.color ? 'winners' : 'losers';
@@ -178,25 +176,27 @@ export class Gambling extends GamblingInstance {
 
 			if (type === 'losers') {
 				endingBet.loss    = endingBet.amount;
-				totalLooserAmount = totalLooserAmount.add(numbro(bet.amount).value());
+				totalLooserAmount = numbro(totalLooserAmount)
+					.add(NumberInput.someFuckingValueToInt(bet.amount))
+					.value();
 			}
 
 			this._endingInformation[type].push(endingBet);
 		});
 
-		const cutPerPerson = totalLooserAmount.divide(this._endingInformation.winners.length || 1);
+		const cutPerPerson = totalLooserAmount / (this._endingInformation.winners.length || 1);
 
 		this._status = GamblingStatus.ENDED;
 
 		if (!this._endingInformation.winners.length) {
 			const botUser = await User.getOrCreate(DiscordJsManager.client().user.id);
 
-			const botAmount = totalLooserAmount.value();
+			const botAmount = totalLooserAmount;
 
 			this._endingInformation.winners.push({
 				color   : this._winningColor,
-				amount  : String(botAmount),
-				takings : String(botAmount),
+				amount  : botAmount,
+				takings : botAmount,
 				user    : botUser,
 			});
 
@@ -204,48 +204,31 @@ export class Gambling extends GamblingInstance {
 
 		} else {
 			this._endingInformation.winners.forEach(bet => {
-				bet.takings = numbro(bet.amount)
-					.multiply(2)
-					.add(cutPerPerson.value())
-					.value()
-					.toString();
+				bet.takings = numbro(bet.amount).multiply(2).add(cutPerPerson).value().toString();
 			});
 		}
 
-		const setStatistics = async (user: User, gambleAmount: string, statType: "losses" | "wins") => {
-			const gambleAmountNum = Decimal128.fromString(gambleAmount);
-
-			return user.queryBuilder()
-				.where({_id : user._id})
-				.update({
-					$max : {
-						[`statistics.gambling.${statType}.mostMoney`] : gambleAmountNum,
-						[`statistics.gambling.totals.mostMoney`]      : gambleAmountNum
-					},
-					$inc : {
-						'statistics.gambling.totals.count'             : 1,
-						[`statistics.gambling.${statType}.count`]      : 1,
-						[`statistics.gambling.${statType}.totalMoney`] : gambleAmountNum
-					} as any
-				});
+		const setStatistics = (user: User, gambleAmount: SomeFuckingValue, statType: "losses" | "wins") => {
+			user.queuedBuilder()
+				.max(`statistics.gambling.${statType}.mostMoney`, gambleAmount)
+				.max(`statistics.gambling.totals.mostMoney`, gambleAmount)
+				.increment('statistics.gambling.totals.count', '1')
+				.increment(`statistics.gambling.${statType}.count`, '1')
+				.increment(`statistics.gambling.${statType}.totalMoney`, String(gambleAmount));
 		};
 
 		for (let winner of this._endingInformation.winners) {
-			await setStatistics(winner.user, winner.takings, 'wins');
-			await winner.user.balanceManager().addToBalance(winner.takings);
-			await winner.user.balanceManager().changed({
-				amount       : winner.takings,
-				balanceType  : "balance",
-				typeOfChange : "added",
-				reason       : `Won a bet`,
-			});
-
 			const gambleLevel = winner.user.skills.gambling.level;
 			const xpForLevel  = (50 * (gambleLevel / 10));
 			const xpForAmount = ((Number(winner.takings) * 0.1) / gambleLevel);
 			const xpGain      = Math.min(15_000, xpForAmount) + xpForLevel;
 
-			await winner.user.skillManager().addXp('gambling', xpGain);
+			setStatistics(winner.user, winner.takings, 'wins');
+
+			winner.user.balanceManager().addToBalance(winner.takings, 'Won a bet');
+			winner.user.skillManager().addXp('gambling', xpGain);
+
+			await winner.user.executeQueued();
 		}
 
 		for (let loser of this._endingInformation.losers) {
@@ -428,14 +411,14 @@ export class Gambling extends GamblingInstance {
 		return (smallestBet === null ? 0 : smallestBet * 0.7);
 	}
 
-	private getTotalBetAmount(user: User, amount: string) {
+	private getTotalBetAmount(user: User, amount: SomeFuckingValue): SomeFuckingValue {
 		const existingBet = this.getUserBet(user);
 
 		if (!existingBet) {
 			return amount;
 		}
 
-		return formatMoney(numbro(existingBet.amount).add(numbro(amount).value()));
+		return numbro(existingBet.amount).add(Number(amount)).value();
 	}
 
 }
