@@ -7,7 +7,6 @@ import {formatMoney, InvalidNumberResponse, isValidNumber, numbroParse} from "..
 import NumberInput from "../../Util/NumberInput";
 
 export default class Balance extends SlashCommand {
-
 	constructor(creator) {
 		super(creator, {
 			deferEphemeral : true,
@@ -70,7 +69,6 @@ export default class Balance extends SlashCommand {
 		this.filePath = __filename;
 	}
 
-
 	async run(ctx: CommandContext) {
 		const gambleChannel = getChannel('gambling');
 
@@ -85,17 +83,14 @@ export default class Balance extends SlashCommand {
 		}
 
 		if (ctx.subcommands.includes('user')) {
-
 			const userObj = ctx.options.user as { user: string };
-
-			const user = await User.getOrCreate(userObj.user);
+			const user    = await User.getOrCreate(userObj.user);
 
 			return await this.handleBalanceOutput(ctx, user);
 		}
 
 		if (ctx.subcommands.includes('gift')) {
-			const options = ctx.options.gift as { user: string; amount: string; };
-
+			const options     = ctx.options.gift as { user: string; amount: string; };
 			const otherUser   = await User.getOrCreate(options.user);
 			const currentUser = await User.getOrCreate(ctx.user.id);
 
@@ -107,7 +102,6 @@ export default class Balance extends SlashCommand {
 
 			return await this.handleHistory(ctx, options.user);
 		}
-
 
 		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get";
 	}

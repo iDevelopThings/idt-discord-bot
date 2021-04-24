@@ -1,8 +1,10 @@
+import {Decimal128} from "mongodb";
 import Investment from "../../Handlers/Investment";
 import {formatMoney, numbro} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import User from "./User";
-import {IBalanceHistory, IBalances} from './UserInformationInterfaces';
+import {IBalanceHistory, IBalances, BalanceHistoryChangeType} from './UserInformationInterfaces';
+
 
 export default class Balance {
 
@@ -16,6 +18,7 @@ export default class Balance {
 		if (this.hasBalance('1', 'balance')) {
 			return 'balance';
 		}
+
 		if (this.hasBalance('1', 'invested')) {
 			return 'invested';
 		}
@@ -27,22 +30,34 @@ export default class Balance {
 		return numbro(this.user.balances[type]).value() >= numbro(amount).value();
 	}
 
-	deductFromBalance(amount: string, type: keyof IBalances = 'balance') {
-		return this.user.queryBuilder()
-			.where({_id : this.user._id})
-			.decrement(
-				`balances.${type}`,
-				amount
-			);
+	deductFromBalance(amount: SomeFuckingValue, reason: string, type: keyof IBalances = 'balance') {
+		amount = NumberInput.someFuckingValueToString(amount);
+
+		this.user.queuedBuilder().decrement(`balances.${type}`, amount);
+
+		this.changed({
+			amount,
+			balanceType  : type,
+			typeOfChange : BalanceHistoryChangeType.REMOVED,
+			reason,
+		});
+
+		return this.user;
 	}
 
-	addToBalance(amount: string, type: keyof IBalances = 'balance') {
-		return this.user.queryBuilder()
-			.where({_id : this.user._id})
-			.increment(
-				`balances.${type}`,
-				amount
-			);
+	addToBalance(amount: SomeFuckingValue, reason: string, type: keyof IBalances = 'balance') {
+		amount = NumberInput.someFuckingValueToString(amount);
+
+		this.user.queuedBuilder().increment(`balances.${type}`, amount);
+
+		this.changed({
+			amount,
+			balanceType  : type,
+			typeOfChange : BalanceHistoryChangeType.ADDED,
+			reason,
+		});
+
+		return this.user;
 	}
 
 	/**
@@ -67,38 +82,33 @@ export default class Balance {
 	}
 
 	/**
-	 * Store a balance change history log
-	 * This is so we can track what happened/view a users change history
 	 *
 	 * @param {IBalanceHistory} history
+	 * @returns {Promise<boolean>}
 	 */
 	changed(history: IBalanceHistory) {
+		if (!(history.amount instanceof Decimal128)) {
+			history.amount = Decimal128.fromString(history.amount.toString());
+		}
+
 		return this.user.queryBuilder()
-			.where({_id : this.user._id})
-			.update({
-				$push : {
-					balanceHistory : history
-				} as any
-			});
+			.push<IBalanceHistory>('balanceHistory', history);
 	}
 
 	/**
 	 * Claim investment money, used by the bot every 30m
 	 * automatically & by the /investment claim command
 	 *
-	 * @returns {Promise<void>}
+	 * @returns {Promise<{number: number}>}
 	 */
 	async claimInvestment() {
-		const income = this.user.balanceManager().income();
+		const income = this.income().toString();
 
-		await this.user.balanceManager().addToBalance(String(income));
-		await this.user.balanceManager().changed({
-			amount       : String(income),
-			balanceType  : "balance",
-			typeOfChange : "added",
-			reason       : `Claimed investment income`
-		});
-		await this.user.cooldownManager().setUsed('claim');
+		this.addToBalance(income, 'Claimed investment income');
+
+		this.user.cooldownManager().setUsed('claim');
+
+		await this.user.executeQueued();
 
 		return {income};
 	}

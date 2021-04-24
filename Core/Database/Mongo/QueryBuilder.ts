@@ -166,10 +166,10 @@ export class QueryBuilder<T> {
 	 * Allows us to add a $inc operation which is applied to the update call.
 	 *
 	 * @param {string} key
-	 * @param {string | number} amount
+	 * @param {string} amount
 	 * @return {this<T>}
 	 */
-	increment(key: string, amount: string | number) {
+	increment(key: string, amount: string) {
 		this._collectionIncrement[key] = Decimal128.fromString(amount.toString());
 
 		return this;
@@ -180,10 +180,10 @@ export class QueryBuilder<T> {
 	 * Automatically inverts the amount passed in so it decrements the value.
 	 *
 	 * @param {string} key
-	 * @param {string | number} amount
+	 * @param {string} amount
 	 * @return {this<T>}
 	 */
-	decrement(key: string, amount: string | number) {
+	decrement(key: string, amount: string) {
 		this._collectionIncrement[key] = Decimal128.fromString(`-${amount.toString()}`);
 
 		return this;
@@ -250,6 +250,8 @@ export class QueryBuilder<T> {
 
 		const result = await this._builderResult.limit(1).next();
 
+		this.reset();
+
 		if (!result) return null;
 
 		return hydrateModel(result, this._model.constructor as any);
@@ -259,9 +261,10 @@ export class QueryBuilder<T> {
 	 * Get all items from the collection that match the query
 	 */
 	async get() {
-		const cursor = await this.resolveFilter();
-
+		const cursor  = await this.resolveFilter();
 		const results = await cursor.toArray();
+
+		this.reset();
 
 		return results.map(
 			result => hydrateModel(result, this._model.constructor as unknown as ClassType<T>)
@@ -278,11 +281,19 @@ export class QueryBuilder<T> {
 	 * @return boolean | UpdateWriteOpResult
 	 */
 	public async update(attributes: UpdateQuery<T> | Partial<T> = {}, options?: UpdateManyOptions & { returnMongoResponse: boolean }) {
+		const query = this.buildUpdateQuery(attributes);
+
+		if (query === null) {
+			return false;
+		}
+
 		const response = await this._model.collection().updateMany(
 			this._collectionFilter,
-			this.buildUpdateQuery(attributes),
+			query,
 			options
 		);
+
+		this.reset();
 
 		if (options?.returnMongoResponse) {
 			return response;
@@ -322,11 +333,12 @@ export class QueryBuilder<T> {
 	 * @private
 	 */
 	private buildUpdateQuery(query: UpdateQuery<T>) {
-		const operation = {
-			$set         : query.$set,
-			$currentDate : Object.assign({}, query.$currentDate, {updatedAt : true}),
-			$inc         : Object.assign({}, this._collectionIncrement, query.$inc),
-			$push        : this.buildPushOperation(query.$push)
+		const operation: UpdateQuery<T> = {
+			$max   : Object.assign({}, this._collectionMax, query.$max),
+			$set   : Object.assign({}, this._collectionSet, query.$set),
+			$unset : Object.assign({}, this._collectionUnset, query.$unset),
+			$inc   : Object.assign({}, this._collectionIncrement, query.$inc),
+			$push  : this.buildPushOperation(query.$push)
 		};
 
 		// Cleanup the query a little
@@ -344,6 +356,12 @@ export class QueryBuilder<T> {
 				delete operation[key];
 			}
 		}
+
+		if (Object.keys(operation).length === 0) {
+			return null;
+		}
+
+		operation['$currentDate'] = Object.assign({}, query.$currentDate, {updatedAt : true});
 
 		return operation;
 	}
@@ -384,5 +402,16 @@ export class QueryBuilder<T> {
 		}
 
 		return op;
+	}
+
+	private reset() {
+		this._collectionFilter    = {};
+		this._collectionSet       = {};
+		this._collectionUnset     = {};
+		this._collectionIncrement = {};
+		this._collectionMax       = {};
+		this._collectionPush.clear();
+		this._collectionAggregation = [];
+		this._collectionOrder       = null;
 	}
 }

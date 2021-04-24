@@ -3,28 +3,11 @@ import {CommandPermissions, Member} from "slash-create";
 import {guild, guildId} from "./Bot";
 
 /**
- * Ehhhh we need a way to get all roles easily
  *
- * @returns {Role[]}
+ * @param {string} role
+ * @returns {Role}
  */
-export const adminRoles = (): Role[] => {
-	const adminRoles = [];
-
-	const ownerRole = guild().roles.cache.find(r => r.name === 'Owner');
-	if (ownerRole) adminRoles.push(ownerRole);
-
-	const adminRole = guild().roles.cache.find(r => r.name === 'Admin');
-	if (adminRole) adminRoles.push(adminRole);
-
-	const vipRole = guild().roles.cache.find(r => r.name === 'VIP IN THIS BITCH');
-	if (vipRole) adminRoles.push(vipRole);
-
-	return adminRoles;
-};
-
-export const getRole = (role: string): Role => {
-	return guild().roles.cache.find(r => r.name.toLowerCase() === role.toLowerCase());
-};
+export const getRole = (role: string): Role => guild().roles.cache.find(r => r.name.toLowerCase() === role.toLowerCase());
 
 /**
  * Get roles from the Guild (case-insensitive)
@@ -48,6 +31,11 @@ export const getRoles = (...roles: string[]): Role[] => {
 	return resolvedRoles;
 };
 
+/**
+ *
+ * @param {Role[]} roles
+ * @returns {CommandPermissions}
+ */
 export const mapRolesToCommandPermissions = (roles: Role[]): CommandPermissions => {
 	const permissions = {};
 
@@ -60,6 +48,12 @@ export const mapRolesToCommandPermissions = (roles: Role[]): CommandPermissions 
 	return permissions;
 };
 
+/**
+ *
+ * @param {Member | GuildMember} user
+ * @param {string} roles
+ * @returns {boolean}
+ */
 export const hasRole = (user: Member | GuildMember, ...roles: string[]): boolean => {
 	const resolvedRoles = getRoles(...roles).map(r => r.id);
 
@@ -75,12 +69,18 @@ export const hasRole = (user: Member | GuildMember, ...roles: string[]): boolean
 };
 
 /**
+ * Returns all "Admin" roles
+ *
+ * @returns {Role[]}
+ */
+export const adminRoles = (): Role[] => getRoles('owner', 'admin', 'vip in this bitch');
+
+/**
  * Admin permissions used in command permissions
  *
  * @returns {CommandPermissions}
  */
 export const adminPermissionsForCommand = (): CommandPermissions => {
-
 	const permissions = {};
 
 	permissions[guildId] = adminRoles().map(role => {
@@ -100,17 +100,4 @@ export const adminPermissionsForCommand = (): CommandPermissions => {
  * @param {Member | GuildMember} user
  * @returns {boolean}
  */
-export const isAdmin = (user: Member | GuildMember) => {
-
-	const roleIds = adminRoles().map(r => r.id);
-
-	if (user instanceof Member) {
-		return user.roles.some(id => roleIds.includes(id));
-	}
-
-	if (user instanceof GuildMember) {
-		return user.roles.cache.some(role => roleIds.includes(role.id));
-	}
-
-	return false;
-};
+export const isAdmin = (user: Member | GuildMember) => hasRole(user, ...adminRoles().map(r => r.name));

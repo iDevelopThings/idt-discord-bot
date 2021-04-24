@@ -1,3 +1,4 @@
+import {Decimal128} from "mongodb";
 import {ISkill} from "./Skills";
 
 export interface IDiscordUserInformation {
@@ -17,16 +18,16 @@ export interface IUserStatistics {
 	gambling: {
 		totals: {
 			count: number;
-			mostMoney: string;
+			mostMoney: number;
 		};
 		wins: {
-			totalMoney: string;
-			mostMoney: string;
+			totalMoney: number;
+			mostMoney: number;
 			count: number;
 		};
 		losses: {
-			totalMoney: string;
-			mostMoney: string;
+			totalMoney: number;
+			mostMoney: number;
 			count: number;
 		};
 	};
@@ -36,8 +37,8 @@ export interface IUserStatistics {
 }
 
 export interface IBalances {
-	balance: string;
-	invested: string;
+	balance: number;
+	invested: number;
 }
 
 export interface ISkills {
@@ -52,8 +53,28 @@ export interface IPreferences {
 }
 
 export interface IBalanceHistory {
-	amount: string;
+	amount: string | number | Decimal128;
 	balanceType: keyof IBalances;
-	typeOfChange: "added" | "removed";
+	typeOfChange: BalanceHistoryChangeType;
 	reason: string;
+}
+
+export enum BalanceHistoryChangeType {
+	ADDED   = 'added',
+	REMOVED = 'removed'
+}
+
+
+export enum StatisticsKeys {
+	MOST_INVESTED               = "statistics.balance.mostInvested",
+	MOST_LOST_TO_TAXES          = "statistics.balance.mostLostToTaxes",
+	GAMBLING_TOTALS_COUNT       = "statistics.gambling.totals.count",
+	GAMBLING_MOST_MONEY         = "statistics.gambling.totals.mostMoney",
+	GAMBLING_WINS_TOTAL_MONEY   = "statistics.gambling.wins.totalMoney",
+	GAMBLING_WINS_MOST_MONEY    = "statistics.gambling.wins.mostMoney",
+	GAMBLING_WINS_COUNT         = "statistics.gambling.wins.count",
+	GAMBLING_LOSSES_TOTAL_MONEY = "statistics.gambling.losses.totalMoney",
+	GAMBLING_LOSSES_MOST_MONEY  = "statistics.gambling.losses.mostMoney",
+	GAMBLING_LOSSES_COUNT       = "statistics.gambling.losses.count",
+	ACTIVITY_MESSAGES_SENT      = "statistics.activity.messagesSent"
 }

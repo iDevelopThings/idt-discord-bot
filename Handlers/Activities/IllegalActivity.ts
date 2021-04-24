@@ -88,10 +88,9 @@ export default abstract class IllegalActivity {
 	/**
 	 * Did we fall in the range of the "chance" and have basically failed?
 	 *
-	 * @returns {null | {name: string, message: string}}
+	 * @returns {null | RandomEventInformation}
 	 */
-	randomEventHit() {
-
+	randomEventHit(): RandomEventInformation {
 		const keys     = Object.keys(this.randomEvents());
 		const eventKey = keys[Math.floor(keys.length * Math.random())];
 		const event    = this.randomEvents()[eventKey];
@@ -104,8 +103,7 @@ export default abstract class IllegalActivity {
 		return null;
 	}
 
-	public async handleRandomEvent(user: User, event: { name: string; message: string }) {
-
+	public async handleRandomEvent(user: User, event: RandomEventInformation) {
 		try {
 			const member         = await guild().member(user.id);
 			const randomAmt      = percentOf(this.startingCost().multiply(2).value().toString(), getRandomInt(10, 30).toString());

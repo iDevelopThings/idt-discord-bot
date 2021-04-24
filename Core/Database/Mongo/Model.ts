@@ -37,6 +37,7 @@ export default class Model<M> {
 	 * Get the query builder instance
 	 */
 	queryBuilder(): QueryBuilder<M> {
+		//		return new QueryBuilder<M>(this);
 		return this._queryBuilder;
 	}
 

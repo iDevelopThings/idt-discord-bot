@@ -3,11 +3,10 @@ import CommandContext from "slash-create/lib/context";
 import Skills, {AvailableSkills, SkillName} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
 import {guildId} from "../../Util/Bot";
-import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
+import {formatMoney, InvalidNumberResponse, isValidNumber, numbroParse} from "../../Util/Formatter";
 import {adminPermissionsForCommand, isAdmin} from "../../Util/Role";
 
 export default class Give extends SlashCommand {
-
 	constructor(creator) {
 		super(creator, {
 			deferEphemeral    : true,
@@ -69,36 +68,58 @@ export default class Give extends SlashCommand {
 		this.filePath = __filename;
 	}
 
-
 	async run(ctx: CommandContext) {
-
-		if(!isAdmin(ctx.member)){
+		if (!isAdmin(ctx.member)) {
 			return "You cannot use this command";
 		}
 
-		if (ctx.subcommands.includes('balance')) {
-			const options = ctx.options.balance as { user: string; amount: string; };
-
-			const valid = isValidNumber(options.amount);
-			if (valid !== InvalidNumberResponse.IS_VALID) {
-				return valid;
-			}
-
-			const usr = await User.getOrCreate(options.user);
-
-			usr.balanceManager().addToBalance(options.amount);
-			usr.balanceManager().changed({
-				amount       : options.amount,
-				balanceType  : "balance",
-				typeOfChange : "added",
-				reason       : `Given money by ${ctx.user.username}`
-			});
-			await usr.save();
-
-			return `Given ${formatMoney(options.amount)} to <@${usr.id}>`;
+		switch (ctx.subcommands[0]) {
+			case 'balance':
+				return this.giveBalance(ctx);
+			case 'level':
+				return this.giveLevel(ctx);
 		}
-
-
 	}
 
+	async giveBalance(ctx: CommandContext) {
+		const options = ctx.options.balance as IBalanceOptions;
+		const valid   = isValidNumber(options.amount);
+
+		if (valid !== InvalidNumberResponse.IS_VALID) {
+			return valid;
+		}
+
+		const value = numbroParse(options.amount);
+		const user  = await User.getOrCreate(options.user);
+
+		await user.balanceManager().addToBalance(value, `Given money by ${ctx.user.username}`);
+		await user.queryBuilder().update();
+
+		return `Given ${formatMoney(options.amount)} to ${user.toString()}`;
+	}
+
+	private async giveLevel(ctx: CommandContext) {
+		const setLevelOptions = ctx.options.level as { skill: SkillName, level: number };
+
+		if (setLevelOptions.level > 99) {
+			return 'Max level is 99.';
+		}
+
+		const user = await User.getOrCreate(ctx.members.first().id);
+		const xp   = Skills.xpForLevel(setLevelOptions.level);
+
+
+		user.queuedBuilder().set({
+			[`skills.${setLevelOptions.skill}.xp`]    : xp,
+			[`skills.${setLevelOptions.skill}.level`] : setLevelOptions.level,
+		});
+		await user.executeQueued();
+
+		return `Successfully set ${user.toString()} to ${setLevelOptions.level} ${setLevelOptions.skill}`;
+	}
+}
+
+export interface IBalanceOptions {
+	user?: string;
+	amount?: string;
 }

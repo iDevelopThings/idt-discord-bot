@@ -76,17 +76,16 @@ export default class Hack extends SlashCommand {
 			return `You cannot hack the bot yet, try again in ${user.cooldownManager().timeLeft('botHack', true)}`;
 		}
 
-		await user.cooldownManager().setUsed('botHack');
+		user.cooldownManager().setUsed('botHack');
 
 		if (getRandomInt(0, 5) !== 1) {
-
-			await user.skillManager().addXp('hacking', 15);
+			user.skillManager().addXp('hacking', 15);
 
 			if (getRandomInstance().boolean() && user.balanceManager().hasMoney()) {
 				const balanceAvailable = user.balanceManager().hasMoneyType();
-
 				const stealPercentage = getRandomPercentage(1, getRandomInt(10, 40));
 				const stealAmount     = percentOf(user.balances[balanceAvailable], stealPercentage.toString());
+				const botAmount = numbro(stealAmount).divide(2).value().toString();
 
 				user.balanceManager().deductFromBalance(stealAmount, 'Bot reversed hack', balanceAvailable);
 				bot.balanceManager().addToBalance(botAmount, `Reversed hack from ${user.username}`);
@@ -152,7 +151,6 @@ export default class Hack extends SlashCommand {
 			await Promise.all([user.executeQueued(), otherUser.executeQueued()]);
 
 			return `${otherUser.toString()} reversed the hack and stole ${formatMoney(amountGivenToOther)} from you.`;
-
 		}
 
 		const stealAmountForXp = numbro(stealAmount).value();

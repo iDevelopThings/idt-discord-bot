@@ -1,8 +1,8 @@
 import {Log} from "@envuso/common";
-import {ColorResolvable} from "discord.js";
+import {GuildMember, ColorResolvable} from "discord.js";
 import {guild} from "../../Util/Bot";
+import NumberInput from "../../Util/NumberInput";
 import User from "./User";
-
 
 export interface ISkill {
 	level: number;
@@ -89,22 +89,17 @@ export default class Skills {
 	 *
 	 * @param {SkillName} skill
 	 * @param {number} xp
-	 * @param forceSave
-	 * @returns {Promise<void>}
 	 */
-	async addXp(skill: SkillName, xp: number, forceSave = true) {
-		const originalLevel = Skills.levelForXp(this.user.skills[skill].xp);
-		const newLevel      = Skills.levelForXp(this.user.skills[skill].xp + xp);
+	addXp(skill: SkillName, xp: number) {
+		const currentXp = NumberInput.someFuckingValueToInt(this.user.skills[skill].xp);
 
-		const member = guild().members.cache.get(this.user.id);
+		const originalLevel = Skills.levelForXp(currentXp);
+		const newLevel      = Skills.levelForXp(currentXp + xp);
+		const member        = guild().members.cache.get(this.user.id);
 
 		if (newLevel > originalLevel && this.user.preference('botDmMessages') && !member.user.bot) {
-			try {
-				const dm = await member.createDM();
-				await dm.send(`You have leveled up ${AvailableSkills[skill].title}. You are now level ${newLevel}\n**You can disable these messages with the command /preferences settings**`);
-			} catch (error) {
-				Log.error('Cannot dm user: ' + member.displayName + ' from add xp method. ' + error.toString());
-			}
+			// Do this in the background... Don't really care
+			this.sendLevelUpMessage(member, skill, newLevel);
 		}
 
 		this.user.skills[skill].xp += xp;
@@ -140,4 +135,11 @@ export default class Skills {
 		return this.user.skills[skill].level >= level;
 	}
 
+	private async sendLevelUpMessage(member: GuildMember, skill: SkillName, level: number) {
+		try {
+			await this.user.sendDm(`You have leveled up ${AvailableSkills[skill].title}. You are now level ${level}\n**You can disable these messages with the command /preferences settings**`);
+		} catch (error) {
+			Log.error('Cannot dm user: ' + member.displayName + ' from add xp method. ' + error.toString());
+		}
+	}
 }

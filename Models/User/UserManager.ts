@@ -13,8 +13,8 @@ export default class UserManager {
 			...discordUser,
 			statistics     : this.defaultStatistics(),
 			balances       : {
-				balance  : '1000',
-				invested : '50'
+				balance  : 1000,
+				invested : 50
 			},
 			cooldowns      : {},
 			skills         : {
