@@ -1,5 +1,5 @@
 import ms from 'ms';
-import {collection} from "../../Models/ModelHelper";
+import CronJobInformation from "../../Models/CronJobInformation";
 
 export default class CronJob {
 	handlerId: string;
@@ -19,14 +19,12 @@ export default class CronJob {
 	}
 
 	public async run() {
-		await collection('crons').updateOne(
-			{handlerId : this.handlerId},
-			{
-				$set : {
-					lastRun : new Date()
-				}
-			}
-		);
+		const cron = await CronJobInformation
+			.where<CronJobInformation>({handlerId : this.handlerId})
+			.first() as CronJobInformation;
+
+		cron.lastRun = new Date();
+		await cron.save();
 
 		this.lastRun = new Date();
 	}

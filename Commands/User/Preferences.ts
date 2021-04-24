@@ -1,12 +1,10 @@
 import {GuildMember, MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
-import {GamblingColor} from "../../Handlers/Gambling/Gambling";
-import {AvailableSkills} from "../../Models/User/Skills";
-import User, {IPreferences} from "../../Models/User/User";
-import {UserInstance} from "../../Models/User/UserInstance";
+import User from "../../Models/User/User";
+import {IPreferences} from "../../Models/User/UserInformationInterfaces";
+import UserManager from "../../Models/User/UserManager";
 import {guild, guildId} from "../../Util/Bot";
-import {formatXp, numbro} from "../../Util/Formatter";
 
 
 export default class Preferences extends SlashCommand {
@@ -42,8 +40,8 @@ export default class Preferences extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
-		const discordUser = await User.getDiscordUser(ctx.user.id);
-		const user        = await User.get(ctx.user.id);
+		const discordUser = await UserManager.getDiscordUser(ctx.user.id);
+		const user        = await User.getOrCreate(ctx.user.id);
 
 		if (!ctx.options.channels && !ctx.options.settings) {
 			return this.returnCurrentPreferences(discordUser, user);
@@ -84,7 +82,7 @@ export default class Preferences extends SlashCommand {
 		return output;
 	}
 
-	private returnCurrentPreferences(discordUser: GuildMember, user: UserInstance) {
+	private returnCurrentPreferences(discordUser: GuildMember, user: User) {
 		const channelsEmbed = new MessageEmbed()
 			.setColor(user.color)
 			.setTitle('Channels');

@@ -2,7 +2,6 @@ import {Duration} from "dayjs/plugin/duration";
 import {ActivityName} from "../../Models/User/Activities";
 import {createDuration} from "../../Util/Date";
 import {Numbro, numbro} from "../../Util/Formatter";
-import {getRandomInstance, getRandomInt} from "../../Util/Random";
 import IllegalActivity, {RandomEvent, SkillRequirement} from "./IllegalActivity";
 
 export default class RaidLocalCannabisFarm extends IllegalActivity {

@@ -2,11 +2,10 @@ import {Log} from "@envuso/common";
 import {guild} from "../../Util/Bot";
 import {getRole} from "../../Util/Role";
 import User from "../User/User";
-import {UserInstance} from "../User/UserInstance";
 import ModerationLog, {IModerationLog, IModerationMuteLog, ModerationType} from "./ModerationLog";
 
 export default class Moderation {
-	constructor(private user: UserInstance) {}
+	constructor(private user: User) {}
 
 	public async mute(minutes: number, reason: string, actionedBy: string) {
 		const member = guild().member(this.user.id);
@@ -35,17 +34,21 @@ export default class Moderation {
 		}
 
 		await member.roles.remove(getRole('muted').id);
+
 		// TODO: Does this need to updateMany?
-		await ModerationLog.update({
-			type        : ModerationType.MUTE,
-			userId      : this.user._id,
-			endAt       : {
-				$gte : new Date()
-			},
-			processedAt : null
-		}, {
-			processedAt : new Date()
-		});
+		// Tis now update many good sir
+		await ModerationLog
+			.where<ModerationLog>({
+				type        : ModerationType.MUTE,
+				userId      : this.user._id,
+				endAt       : {
+					$gte : new Date()
+				},
+				processedAt : null
+			})
+			.update({
+				$set : {processedAt : new Date()}
+			});
 
 		Log.info(`Unmuted ${this.user.username}:${this.user.discriminator}`);
 	}
@@ -55,8 +58,9 @@ export default class Moderation {
 	 */
 
 	private async createLog(type: ModerationType, actionedByDiscordId: string, data: IModerationMuteLog) {
-		const actionedBy = await User.get(actionedByDiscordId);
-		const log        = await ModerationLog.create({
+		const actionedBy = await User.getOrCreate(actionedByDiscordId);
+
+		const log = await ModerationLog.create<ModerationLog>({
 			type,
 			[type]       : data,
 			userId       : this.user._id,

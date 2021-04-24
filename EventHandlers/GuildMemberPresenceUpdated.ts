@@ -1,5 +1,4 @@
-import {ClientEvents, GuildMember, PartialGuildMember, Presence} from "discord.js";
-import User from "../Models/User/User";
+import {ClientEvents, Presence} from "discord.js";
 import BaseEventHandler, {ClientEventsTypes} from "./BaseEventHandler";
 
 const ClientEvent = ClientEventsTypes.GUILD_MEMBER_PRESENCE_UPDATE;

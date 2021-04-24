@@ -1,5 +1,5 @@
 import {createDuration, dayjs} from "../../Util/Date";
-import {UserInstance} from "./UserInstance";
+import User from "./User";
 
 export interface ITimeStates {
 	claim?: string;
@@ -18,7 +18,7 @@ export type TimeStateName = keyof (typeof TimeStates);
 
 export default class Cooldown {
 
-	constructor(private user: UserInstance) {}
+	constructor(private user: User) {}
 
 	async setUsed(state: TimeStateName) {
 		this.user.cooldowns[state] = dayjs().add(TimeStates[state]).format();

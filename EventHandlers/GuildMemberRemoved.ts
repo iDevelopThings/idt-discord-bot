@@ -19,7 +19,9 @@ export default class GuildMemberRemoved extends BaseEventHandler<'guildMemberRem
 
 		await introChannel.send(`${member.displayName} has left the server.`);
 
-		await User.deleteUser(member.id);
+		const user = await User.where<User>({id : member.id}).first() as User;
+
+		await user.delete();
 	}
 
 	getEventName(): ClientEventType {

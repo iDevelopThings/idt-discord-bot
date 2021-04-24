@@ -2,7 +2,6 @@ import {MessageEmbed, TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
-import {UserInstance} from "../../Models/User/UserInstance";
 import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 
@@ -79,7 +78,7 @@ export default class Balance extends SlashCommand {
 		}
 
 		if (ctx.subcommands.includes('get')) {
-			const user = await User.get(ctx.user.id);
+			const user = await User.getOrCreate(ctx.user.id);
 
 			return await this.handleBalanceOutput(ctx, user);
 		}
@@ -88,7 +87,7 @@ export default class Balance extends SlashCommand {
 
 			const userObj = ctx.options.user as { user: string };
 
-			const user = await User.get(userObj.user);
+			const user = await User.getOrCreate(userObj.user);
 
 			return await this.handleBalanceOutput(ctx, user);
 		}
@@ -96,8 +95,8 @@ export default class Balance extends SlashCommand {
 		if (ctx.subcommands.includes('gift')) {
 			const options = ctx.options.gift as { user: string; amount: string; };
 
-			const otherUser   = await User.get(options.user);
-			const currentUser = await User.get(ctx.user.id);
+			const otherUser   = await User.getOrCreate(options.user);
+			const currentUser = await User.getOrCreate(ctx.user.id);
 
 			return await this.handleGiftBalance(ctx, options.amount, currentUser, otherUser);
 		}
@@ -112,7 +111,7 @@ export default class Balance extends SlashCommand {
 		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get";
 	}
 
-	private async handleBalanceOutput(ctx: CommandContext, user: UserInstance) {
+	private async handleBalanceOutput(ctx: CommandContext, user: User) {
 		const channel = guild().channels.cache.get(ctx.channelID) as TextChannel;
 
 		const embed = new MessageEmbed()
@@ -125,7 +124,7 @@ export default class Balance extends SlashCommand {
 		await ctx.send({embeds : [embed]});
 	}
 
-	private async handleGiftBalance(ctx: CommandContext, amount: string, currentUser: UserInstance, otherUser: UserInstance) {
+	private async handleGiftBalance(ctx: CommandContext, amount: string, currentUser: User, otherUser: User) {
 
 		const isValid = isValidNumber(amount, currentUser.balanceManager());
 
@@ -155,7 +154,7 @@ export default class Balance extends SlashCommand {
 	}
 
 	private async handleHistory(ctx: CommandContext, otherUserId?: string) {
-		const user = await User.get(otherUserId ? otherUserId : ctx.user.id);
+		const user = await User.getOrCreate(otherUserId ? otherUserId : ctx.user.id);
 
 		if (!user) {
 			return "Cannot find user...";

@@ -1,8 +1,7 @@
-import {ClientEvents, GuildMember, PartialGuildMember, TextChannel} from "discord.js";
+import {ClientEvents, GuildMember, TextChannel} from "discord.js";
 import User from "../Models/User/User";
-import {UserInstance} from "../Models/User/UserInstance";
+import UserManager from "../Models/User/UserManager";
 import {guild} from "../Util/Bot";
-import {dayjs} from "../Util/Date";
 import BaseEventHandler, {ClientEventsTypes} from "./BaseEventHandler";
 
 const ClientEvent = ClientEventsTypes.GUILD_MEMBER_ADD;
@@ -23,10 +22,11 @@ export default class GuildMemberAdded extends BaseEventHandler<ClientEventType> 
 		await introChannel.send(`Welcome ${member.toString()}`);
 	}
 
-	private async updateUserInformation(member: GuildMember): Promise<UserInstance> {
-		const user        = await User.get(member.id);
-		const discordInfo = await User.getDiscordUserInformation(member.id);
-		return await User.update({id : discordInfo.id}, discordInfo, true);
+	private async updateUserInformation(member: GuildMember) {
+		const user        = await User.getOrCreate(member.id);
+		const discordInfo = await UserManager.getDiscordUserInformation(member.id);
+
+		await User.where<User>({id : discordInfo.id}).update({$set : discordInfo});
 	}
 
 	getEventName(): ClientEventType {

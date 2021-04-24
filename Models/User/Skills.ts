@@ -1,7 +1,7 @@
 import {Log} from "@envuso/common";
 import {ColorResolvable} from "discord.js";
 import {guild} from "../../Util/Bot";
-import {UserInstance} from "./UserInstance";
+import User from "./User";
 
 
 export interface ISkill {
@@ -37,7 +37,7 @@ export type SkillName = keyof (typeof AvailableSkills);
 
 export default class Skills {
 
-	constructor(private user: UserInstance) {}
+	constructor(private user: User) {}
 
 	/**
 	 * Get the level for a specified amount of xp

@@ -1,4 +1,3 @@
-import {Obj} from "@envuso/common";
 import axios from "axios";
 
 export class MemeResult {
@@ -22,7 +21,7 @@ export class MemeResult {
 	}
 
 	public async regenerate() {
-		const meme = await Meme.getMeme();
+		const meme = await MemeApi.getMeme();
 
 		Object.assign(this, meme);
 	}
@@ -32,7 +31,7 @@ export class MemeResult {
 	}
 }
 
-export default class Meme {
+export default class MemeApi {
 
 	static async getMeme(allowNsfw: boolean = false): Promise<MemeResult> {
 		const response = await axios.get('https://meme-api.herokuapp.com/gimme');

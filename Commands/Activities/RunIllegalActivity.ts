@@ -46,7 +46,7 @@
 //
 //	async run(ctx: CommandContext): Promise<MessageOptions | string> {
 //
-//		const user = await User.get(ctx.user.id);
+//		const user = await User.getOrCreate(ctx.user.id);
 //
 //		if (ctx.subcommands.includes('illegal_activity')) {
 //			const options = ctx.options.illegal_activity as IllegalActivity;

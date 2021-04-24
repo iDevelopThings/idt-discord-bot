@@ -1,7 +1,6 @@
 import {ColorResolvable, Message, MessageEmbed} from "discord.js";
-import {client} from "../../index";
+import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
-import {UserInstance} from "../../Models/User/UserInstance";
 import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, Numbro} from "../../Util/Formatter";
 import {getRandomInt} from "../../Util/Random";
 import {GamblingInstance, GamblingStatus} from "./GamblingInstance";
@@ -10,7 +9,7 @@ import {GamblingInstanceType} from "./GamblingInstanceManager";
 interface Bet {
 	color: GamblingColor;
 	amount: string;
-	user: UserInstance;
+	user: User;
 }
 
 interface EndingBet extends Bet {
@@ -73,26 +72,26 @@ export class Gambling extends GamblingInstance {
 	/**
 	 * Check if this user has placed a bet yet.
 	 *
-	 * @param {UserInstance} user
+	 * @param {User} user
 	 * @returns {boolean}
 	 */
-	hasPlacedBet(user: UserInstance) {
+	hasPlacedBet(user: User) {
 		return this._betters.some(bet => bet.user.id === user.id);
 	}
 
-	private getUserBet(user: UserInstance) {
+	private getUserBet(user: User) {
 		return this._betters.find(bet => bet.user.id === user.id);
 	}
 
 	/**
 	 * Place a bet as x user against a color
 	 *
-	 * @param {UserInstance} user
+	 * @param {User} user
 	 * @param {GamblingColor} color
 	 * @param {string} amount
 	 * @returns {Promise<{joined: boolean, message: string} | {joined: boolean, message: string} | {joined: boolean, message: string}>}
 	 */
-	async placeBet(user: UserInstance, color: GamblingColor, amount: string) {
+	async placeBet(user: User, color: GamblingColor, amount: string) {
 
 		const isValid = isValidNumber(amount);
 
@@ -189,7 +188,7 @@ export class Gambling extends GamblingInstance {
 		this._status = GamblingStatus.ENDED;
 
 		if (!this._endingInformation.winners.length) {
-			const botUser = await User.get(client.user.id);
+			const botUser = await User.getOrCreate(DiscordJsManager.client().user.id);
 
 			const botAmount = totalLooserAmount.value();
 
@@ -212,7 +211,7 @@ export class Gambling extends GamblingInstance {
 			});
 		}
 
-		const setStatistics = (user: UserInstance, gambleAmount: string, statType: "losses" | "wins") => {
+		const setStatistics = (user: User, gambleAmount: string, statType: "losses" | "wins") => {
 			user.statistics.gambling[statType].count++;
 			user.statistics.gambling[statType].totalMoney = numbro(user.statistics.gambling[statType].totalMoney)
 				.add(numbro(gambleAmount).value())
@@ -433,7 +432,7 @@ export class Gambling extends GamblingInstance {
 		return (smallestBet === null ? 0 : smallestBet * 0.7);
 	}
 
-	private getTotalBetAmount(user: UserInstance, amount: string) {
+	private getTotalBetAmount(user: User, amount: string) {
 		const existingBet = this.getUserBet(user);
 
 		if (!existingBet) {

@@ -1,4 +1,4 @@
-import {ClientEvents, GuildMember, Message, PartialGuildMember} from "discord.js";
+import {ClientEvents, Message} from "discord.js";
 import User from "../Models/User/User";
 import BaseEventHandler, {ClientEventsTypes} from "./BaseEventHandler";
 
@@ -9,13 +9,26 @@ type ClientEventsType = ClientEvents[ClientEventType];
 export default class GuildMessageSent extends BaseEventHandler<ClientEventType> {
 
 	async handle(message: Message) {
-		const user = await User.get(message.author.id);
+		const user = await User.getOrCreate(message.author.id);
 
-		if (user) {
-			user.statistics.activity.messagesSent++;
-			await user.skillManager().addXp("chatting", 30, false);
-			await user.save();
+
+		if (!user) {
+			return;
 		}
+
+		//Ehhh, we modify the data first without saving it...
+		user.statistics.activity.messagesSent++;
+		await user.skillManager().addXp("chatting", 30, false);
+
+		// Now we'll issue a specific update, so we don't overwrite other values.
+		await User.where<User>({id : message.author.id})
+			.update({
+				$set : {
+					'statistics.activity.messagesSent' : 1,
+					'skills.chatting.xp'               : user.skills.chatting.xp,
+					'skills.chatting.level'            : user.skills.chatting.level,
+				}
+			});
 	}
 
 	getEventName(): ClientEventType {

@@ -6,9 +6,15 @@
     "pretty": true,
     "strict": false,
     "allowJs": true,
+    "experimentalDecorators": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
+    "emitDecoratorMetadata": true,
     "outDir": "dist",
+    "types": [
+      "node",
+      "reflect-metadata"
+    ],
     "typeRoots": [
       "node_modules/@types"
     ]
@@ -19,7 +25,8 @@
     "./Handlers/**/*.ts",
     "./Models/**/*.ts",
     "./Util/**/*.ts",
-    "./*.ts",
+    "./Core/**/*.ts",
+    "./*.ts"
   ],
   "exclude": [
     "node_modules",

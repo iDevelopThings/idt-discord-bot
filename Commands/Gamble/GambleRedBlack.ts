@@ -4,7 +4,7 @@ import {GamblingInstanceManager, GamblingInstanceType} from "../../Handlers/Gamb
 import {Gambling, GamblingColor} from "../../Handlers/Gambling/Gambling";
 import User from "../../Models/User/User";
 import {getChannel, getGambleChannel, guildId} from "../../Util/Bot";
-import {numbro, numbroParse, percentOf} from "../../Util/Formatter";
+import { percentOf} from "../../Util/Formatter";
 
 export default class GambleRedBlack extends SlashCommand {
 
@@ -107,7 +107,7 @@ export default class GambleRedBlack extends SlashCommand {
 			return `You can only use /gamble commands in the ${gambleChannel.toString()} channel.`;
 		}
 
-		const user = await User.get(ctx.user.id);
+		const user = await User.getOrCreate(ctx.user.id);
 
 		const isPercentGamble = !!ctx.options?.percent;
 		const options: any    = ctx.options[isPercentGamble ? 'percent' : 'amount'];

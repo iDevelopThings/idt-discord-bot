@@ -1,242 +1,87 @@
-import {GuildMember} from "discord.js";
-import {FilterQuery, ObjectId, UpdateQuery} from "mongodb";
-import {guild} from "../../Util/Bot";
-import {collection} from "../ModelHelper";
-import {ITimeStates} from "./Cooldown";
-import {ISkill} from "./Skills";
-import {UserInstance} from "./UserInstance";
+import {ObjectId} from "mongodb";
+import {id} from "../../Core/Database/ModelDecorators";
+import Model from "../../Core/Database/Mongo/Model";
+import Moderation from "../Moderation/Moderation";
+import Activities, {IActivities} from "./Activities";
+import Balance from "./Balance";
+import Cooldown, {ITimeStates} from "./Cooldown";
+import Skills from "./Skills";
+import {IBalanceHistory, IBalances, IPreferences, ISkills, IUserStatistics} from "./UserInformationInterfaces";
+import UserManager from "./UserManager";
 
-export interface IDiscordUserInformation {
-	id: string;
-	displayName: string;
-	username: string;
-	discriminator: string;
-	avatar: string;
-	color: string;
-}
 
-export interface IUserStatistics {
-	balance: {
-		mostInvested: string;
-		mostLostToTaxes: string;
-	};
-	gambling: {
-		totals: {
-			count: number;
-			mostMoney: string;
-		};
-		wins: {
-			totalMoney: string;
-			mostMoney: string;
-			count: number;
-		};
-		losses: {
-			totalMoney: string;
-			mostMoney: string;
-			count: number;
-		};
-	};
-	activity: {
-		messagesSent: number;
-	}
-}
+export default class User extends Model<User> {
 
-export interface IBalances {
-	balance: string;
-	invested: string;
-}
-
-export interface ISkills {
-	gambling: ISkill;
-	hacking: ISkill;
-	chatting: ISkill;
-	investing: ISkill;
-}
-
-export interface IPreferences {
-	botDmMessages: boolean;
-}
-
-export interface IBalanceHistory {
-	amount: string;
-	balanceType: keyof IBalances;
-	typeOfChange: "added" | "removed";
-	reason: string;
-}
-
-export interface IUser extends IDiscordUserInformation {
+	@id
 	_id: ObjectId;
-	balances: IBalances;
-	statistics: IUserStatistics;
-	cooldowns: ITimeStates;
-	preferences: IPreferences;
-	balanceHistory: IBalanceHistory[];
-	skills: ISkills;
-	createdAt: Date;
-	updatedAt: Date;
-	leftAt: Date;
-}
 
-export class User {
+	public id: string;
+	public displayName: string;
+	public username: string;
+	public avatar: string;
+	public discriminator: string;
+	public color: string;
+	public balances: IBalances;
+	public balanceHistory: IBalanceHistory[] = [];
+	public statistics: IUserStatistics;
+	public cooldowns: ITimeStates;
+	public preferences: IPreferences;
+	public activities: { [key: string]: IActivities };
+	public skills: ISkills;
+	public createdAt: Date;
+	public updatedAt: Date;
 
-	static collection() {
-		return collection<IUser>('users');
-	}
 
-	static async findOne(filter: FilterQuery<IUser>): Promise<UserInstance> {
-		const record = await this.collection().findOne(filter);
-
-		if (!record) {
-			return null;
-		}
-
-		return new UserInstance(record);
-	}
-
-	static async get(discordId: string): Promise<UserInstance> {
-
-		let user = await this.collection().findOne({
-			id : discordId
-		});
+	static async getOrCreate(discordId: string): Promise<User> {
+		let user = await User.findOne<User>({id : discordId});
 
 		if (!user) {
-			user = await this.createUser(discordId);
+			user = await UserManager.createUser(discordId);
 		}
 
-		return new UserInstance(user);
+		return user;
 	}
 
-	static async all() {
-		return this.collection().find().toArray();
+
+	skillManager(): Skills {
+		return new Skills(this);
 	}
 
-	static async createUser(discordId: string) {
-		const discordUser = await this.getDiscordUserInformation(discordId);
-
-		const createdUser = await this.collection().insertOne({
-			...discordUser,
-			statistics     : this.defaultStatistics(),
-			balances       : {
-				balance  : '1000',
-				invested : '50'
-			},
-			cooldowns      : {},
-			skills         : {
-				chatting  : {
-					xp    : 0,
-					level : 1
-				},
-				gambling  : {
-					xp    : 0,
-					level : 1
-				},
-				hacking   : {
-					xp    : 0,
-					level : 1
-				},
-				investing : {
-					xp    : 0,
-					level : 1
-				},
-			},
-			preferences    : {
-				botDmMessages : true,
-			},
-			balanceHistory : [],
-			createdAt      : new Date(),
-			updatedAt      : new Date(),
-			leftAt         : null
-		});
-
-		return this.collection().findOne({_id : createdUser.insertedId});
+	cooldownManager(): Cooldown {
+		return new Cooldown(this);
 	}
 
-	static async update(filter: FilterQuery<IUser>, values: UpdateQuery<IUser> | Partial<IUser>, getUpdatedInfo: boolean = false) {
-
-		if ((values as any)?.updatedAt) {
-			delete (values as any).updatedAt;
-		}
-
-		const queryValues = <UpdateQuery<IUser>>values;
-
-		values = {
-			$set         : values,
-			$currentDate : {'updatedAt' : true}
-		};
-
-		const isManualUpdate = !!(queryValues?.$set || queryValues?.$currentDate);
-
-		if (isManualUpdate) {
-			values = queryValues;
-		}
-
-		const updated = await this.collection().updateOne(
-			filter, values
-		);
-
-		if (!getUpdatedInfo) {
-			return;
-		}
-
-		const user = await this.collection().findOne(filter);
-
-		return new UserInstance(user);
+	balanceManager(): Balance {
+		return new Balance(this);
 	}
 
-	static deleteUser(id : string){
-		return this.collection().deleteOne({id : id});
+	activityManager(): Activities {
+		return new Activities(this);
 	}
 
-	static async getDiscordUser(discordId): Promise<GuildMember> {
-		const discordUser = await guild().members.fetch(discordId);
-
-		if (!discordUser) {
-			throw new Error('Cannot get discord user info from discordjs to insert into db.');
-		}
-
-		return discordUser;
+	moderationManager(): Moderation {
+		return new Moderation(this);
 	}
 
-	static async getDiscordUserInformation(discordId: string): Promise<IDiscordUserInformation> {
-		const discordUser = await this.getDiscordUser(discordId);
 
-		return {
-			id            : discordUser.id,
-			color         : discordUser.displayHexColor,
-			avatar        : discordUser.user.avatarURL({format : 'png'}),
-			discriminator : discordUser.user.discriminator,
-			displayName   : discordUser.displayName,
-			username      : discordUser.user.username
-		};
+	/**
+	 * We allow the user to change some settings
+	 * Like if they can be dmed by the bot or not for certain things...
+	 *
+	 * @param {keyof IPreferences} name
+	 * @returns {boolean}
+	 */
+	preference(name: keyof IPreferences): boolean {
+		const pref = this.preferences[name];
+
+		if (pref === undefined) return true;
+
+		return pref;
 	}
 
-	private static defaultStatistics(): IUserStatistics {
-		return {
-			balance  : {
-				mostInvested    : '0',
-				mostLostToTaxes : '0',
-			},
-			gambling : {
-				totals : {
-					count     : 0,
-					mostMoney : '0',
-				},
-				wins   : {
-					totalMoney : '0',
-					mostMoney  : '0',
-					count      : 0,
-				},
-				losses : {
-					totalMoney : '0',
-					mostMoney  : '0',
-					count      : 0,
-				},
-			},
-			activity : {
-				messagesSent : 0
-			}
-		};
+	toString() {
+		return `<@${this.id}>`;
 	}
+
 }
 
-export default User;

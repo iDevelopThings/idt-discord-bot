@@ -1,11 +1,11 @@
 import Investment from "../../Handlers/Investment";
 import {formatMoney, numbro} from "../../Util/Formatter";
-import {IBalanceHistory, IBalances} from "./User";
-import {UserInstance} from "./UserInstance";
+import User from "./User";
+import {IBalanceHistory, IBalances} from './UserInformationInterfaces';
 
 export default class Balance {
 
-	constructor(private user: UserInstance) {}
+	constructor(private user: User) {}
 
 	hasMoney(): boolean {
 		return this.hasBalance('1', 'balance') || this.hasBalance('1', 'invested');

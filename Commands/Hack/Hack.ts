@@ -1,9 +1,8 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
-import {client} from "../../index";
+import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
-import {UserInstance} from "../../Models/User/UserInstance";
-import {getChannel, getGambleChannel, guildId} from '../../Util/Bot';
+import {getChannel, guildId} from '../../Util/Bot';
 import {formatMoney, formatPercentage, formatXp, numbro, percentOf} from "../../Util/Formatter";
 import {getRandomInstance, getRandomInt, getRandomPercentage} from "../../Util/Random";
 
@@ -47,7 +46,7 @@ export default class Hack extends SlashCommand {
 			return `You can only use /hack commands in the ${gambleChannel.toString()} channel.`;
 		}
 
-		const user = await User.get(ctx.user.id);
+		const user = await User.getOrCreate(ctx.user.id);
 
 		const options = ctx.options as { bot?: string, user?: { user: string } };
 
@@ -56,7 +55,7 @@ export default class Hack extends SlashCommand {
 		}
 
 		if (options?.user?.user) {
-			if (client.user.id === options.user.user) {
+			if (DiscordJsManager.client().user.id === options.user.user) {
 				return "You cannot hack the bot like this. Use /hack bot.";
 			}
 
@@ -66,8 +65,8 @@ export default class Hack extends SlashCommand {
 		return "You must use /hack bot or /hack user";
 	}
 
-	private async hackBot(user: UserInstance) {
-		const bot = await User.get(client.user.id);
+	private async hackBot(user: User) {
+		const bot = await User.getOrCreate(DiscordJsManager.client().user.id);
 
 		if (numbro(bot.balances.balance).value() === 0) {
 			return 'The bot has no balance to hack right now... /gamble some more so it can make some money!';
@@ -144,8 +143,8 @@ export default class Hack extends SlashCommand {
 		return `You successfully hacked the bot for ${formatMoney(botBalance)} and gained ${formatXp(String(xpGain))} hacking xp.`;
 	}
 
-	private async hackUser(user: UserInstance, otherUserId: string) {
-		const otherUser = await User.get(otherUserId);
+	private async hackUser(user: User, otherUserId: string) {
+		const otherUser = await User.getOrCreate(otherUserId);
 
 		if (otherUser.id === user.id) {
 			return "You can't hack yourself silly.";

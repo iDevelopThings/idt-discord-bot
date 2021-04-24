@@ -1,11 +1,9 @@
-import {TextChannel, Util} from "discord.js";
+import {TextChannel} from "discord.js";
 import { SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
-import Meme from "../../Handlers/Meme";
-import MemeModel from "../../Models/MemeModel";
+import MemeApi from "../../Handlers/MemeApi";
+import Meme from "../../Models/Meme";
 import {guild, guildId} from "../../Util/Bot";
-
-
 
 export default class SendMeme extends SlashCommand {
 
@@ -29,12 +27,12 @@ export default class SendMeme extends SlashCommand {
 			return `You can only use this command in the ${memesChannel.toString()} channel.`;
 		}
 
-		const meme = await Meme.getMeme(false);
+		const meme = await MemeApi.getMeme(false);
 
-		if(await MemeModel.exists(meme.url)){
+		if(await Meme.exists(meme.url)){
 			await meme.regenerate();
 		} else {
-			await MemeModel.store(meme);
+			await Meme.create<Meme>(meme);
 		}
 
 		await ctx.send('Your meme is coming good sir');

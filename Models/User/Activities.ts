@@ -1,8 +1,7 @@
-//import RunIllegalActivity from "../../Commands/Activities/RunIllegalActivity";
 import IllegalActivity from "../../Handlers/Activities/IllegalActivity";
 import RaidLocalCannabisFarm from "../../Handlers/Activities/RaidLocalCannabisFarm";
 import {dayjs} from "../../Util/Date";
-import {UserInstance} from "./UserInstance";
+import User from "./User";
 
 export type ActivityName = "raid_local_cannabis";
 
@@ -13,7 +12,7 @@ export interface IActivities {
 
 export default class Activities {
 
-	constructor(private user: UserInstance) {}
+	constructor(private user: User) {}
 
 	hasActivity(name: ActivityName) {
 		return !!this.user.activities[name];

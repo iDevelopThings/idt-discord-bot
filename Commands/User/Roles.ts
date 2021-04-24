@@ -1,11 +1,6 @@
-import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
-import {GamblingColor} from "../../Handlers/Gambling/Gambling";
-import {AvailableSkills} from "../../Models/User/Skills";
-import User from "../../Models/User/User";
 import {guild, guildId} from "../../Util/Bot";
-import {formatXp, numbro} from "../../Util/Formatter";
 
 const roleChoices = [
 	{name : 'Developer Role', value : 'Developer'},

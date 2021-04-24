@@ -2,11 +2,10 @@ import {Log} from "@envuso/common";
 import {Duration} from "dayjs/plugin/duration";
 import {ActivityName} from "../../Models/User/Activities";
 import {SkillName} from "../../Models/User/Skills";
-import {UserInstance} from "../../Models/User/UserInstance";
+import User from "../../Models/User/User";
 import {guild} from "../../Util/Bot";
 import {timeRemaining} from "../../Util/Date";
 import {formatMoney, Numbro, percentOf, title} from "../../Util/Formatter";
-import {upperFirst, upperCase} from 'lodash/string';
 import {getRandomInt} from "../../Util/Random";
 
 export type SkillRequirement = { skill: SkillName; level: number; }
@@ -33,7 +32,7 @@ export default abstract class IllegalActivity {
 
 	abstract levelRequirement(): null | SkillRequirement;
 
-	async canStart(user: UserInstance): Promise<{ isAble: boolean; reason: string }> {
+	async canStart(user: User): Promise<{ isAble: boolean; reason: string }> {
 		const manager = user.activityManager();
 
 		if (manager.hasActivity(this.name()) && !manager.hasEnded(this.name())) {
@@ -63,7 +62,7 @@ export default abstract class IllegalActivity {
 		};
 	}
 
-	async start(user: UserInstance) {
+	async start(user: User) {
 
 		await user.activityManager().setStarted(this.name(), this);
 
@@ -94,7 +93,7 @@ export default abstract class IllegalActivity {
 		return null;
 	}
 
-	public async handleRandomEvent(user: UserInstance, event: { name: string; message: string }) {
+	public async handleRandomEvent(user: User, event: { name: string; message: string }) {
 
 		try {
 			const member    = await guild().member(user.id);

@@ -2,7 +2,7 @@ import {createCanvas, loadImage} from 'canvas';
 import {MessageAttachment, TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
-import User, {IUser} from "../../Models/User/User";
+import User from "../../Models/User/User";
 import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney} from "../../Util/Formatter";
 
@@ -77,7 +77,8 @@ export default class Leaderboard extends SlashCommand {
 				break;
 		}
 
-		const users = await User.collection().find({
+
+		const users = await User.getCollection<User>().find({
 			username : {$not : {$eq : 'iDevelopBot'}}
 		}, {
 			collation : {numericOrdering : true, locale : "en_US"},
@@ -90,7 +91,7 @@ export default class Leaderboard extends SlashCommand {
 		const drawBalances = async (avatars = false) => {
 
 			for (let usersKey in users) {
-				const user: IUser = users[usersKey];
+				const user: User = users[usersKey];
 
 				const username             = `${user.displayName}`;
 				context.font               = '400 25px sans-serif';

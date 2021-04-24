@@ -1,9 +1,7 @@
 import {GuildMember, MessageReaction, TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
-import {GamblingColor} from "../../Handlers/Gambling/Gambling";
 import User from "../../Models/User/User";
-import {UserInstance} from "../../Models/User/UserInstance";
 import {getChannel, guild, guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, percentOf} from "../../Util/Formatter";
 import {getRandomPercentage} from "../../Util/Random";
@@ -111,7 +109,7 @@ export default class Invest extends SlashCommand {
 			return `You can only use /invest commands in the ${gambleChannel.toString()} channel.`;
 		}
 
-		const user = await User.get(ctx.user.id);
+		const user = await User.getOrCreate(ctx.user.id);
 
 		if (ctx.subcommands.includes('add_percent') || ctx.subcommands.includes('add_amount')) {
 			return await this.addToInvestment(ctx, user);
@@ -127,7 +125,7 @@ export default class Invest extends SlashCommand {
 
 	}
 
-	async addToInvestment(ctx: CommandContext, user: UserInstance) {
+	async addToInvestment(ctx: CommandContext, user: User) {
 
 		const isPercent = !!ctx.options?.add_percent;
 		const options: any    = ctx.options[isPercent ? 'add_percent' : 'add_amount'];
@@ -169,7 +167,7 @@ export default class Invest extends SlashCommand {
 		return `${formatMoney(amount)} has been added to your investments.`;
 	}
 
-	private async claim(ctx: CommandContext, user: UserInstance) {
+	private async claim(ctx: CommandContext, user: User) {
 
 		if (!user.cooldownManager().canUse('claim')) {
 			return `You cannot claim for another ${user.cooldownManager().timeLeft('claim', true)}.`;
@@ -180,7 +178,7 @@ export default class Invest extends SlashCommand {
 		return `You claimed ${formatMoney(income, true)} from your investments.`;
 	}
 
-	private async withdraw(ctx: CommandContext, user: UserInstance) {
+	private async withdraw(ctx: CommandContext, user: User) {
 		const channel       = guild().channels.cache.get(ctx.channelID) as TextChannel;
 		const randomPercent = getRandomPercentage(3, 30);
 

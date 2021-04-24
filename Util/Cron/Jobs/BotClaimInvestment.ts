@@ -1,4 +1,4 @@
-import {client} from "../../../index";
+import DiscordJsManager from "../../../Core/Discord/DiscordJsManager";
 import User from "../../../Models/User/User";
 import CronJob from "../CronJob";
 
@@ -10,7 +10,7 @@ export default class BotClaimInvestment extends CronJob {
 	public async run() {
 		await super.run();
 
-		const botUser = await User.get(client.user.id);
+		const botUser = await User.getOrCreate(DiscordJsManager.client().user.id);
 
 		await botUser.balanceManager().claimInvestment();
 	}

@@ -1,7 +1,7 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
-import {guild, guildId} from "../../Util/Bot";
+import {guildId} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 import {adminPermissionsForCommand, isAdmin} from "../../Util/Role";
 
@@ -55,7 +55,7 @@ export default class Give extends SlashCommand {
 				return valid;
 			}
 
-			const usr = await User.get(options.user);
+			const usr = await User.getOrCreate(options.user);
 
 			usr.balanceManager().addToBalance(options.amount);
 			usr.balanceManager().changed({

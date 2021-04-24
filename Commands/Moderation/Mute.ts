@@ -44,7 +44,7 @@ export default class Mute extends SlashCommand {
 	}
 
 	async run(ctx: CommandContext) {
-		if (!hasRole(ctx.member, 'admin', 'vip in this bitch', 'mod')) {
+		if (!hasRole(ctx.member, 'owner', 'admin', 'vip in this bitch', 'mod')) {
 			return 'You cannot use this command';
 		}
 
@@ -60,7 +60,7 @@ export default class Mute extends SlashCommand {
 			return 'Invalid minutes';
 		}
 
-		const user = await User.get(userId);
+		const user = await User.getOrCreate(userId);
 		let result;
 
 		if (valid === 0) {

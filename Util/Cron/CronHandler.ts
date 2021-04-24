@@ -1,5 +1,5 @@
 import {Log} from '@envuso/common';
-import {collection} from '../../Models/ModelHelper';
+import CronJobInformation from "../../Models/CronJobInformation";
 import CronJob from './CronJob';
 import path from 'path';
 
@@ -20,17 +20,17 @@ export default class CronHandler {
 
 	async register(jobClass: typeof CronJob) {
 		const job     = new jobClass();
-		const jobInfo = await collection<ICron>('crons').findOne({handlerId : job.handlerId});
+		const jobInfo = await CronJobInformation.findOne<CronJobInformation>({handlerId : job.handlerId});
 
 		if (jobInfo) {
-			job.lastRun   = new Date(jobInfo.lastRun);
+			job.lastRun = new Date(jobInfo.lastRun);
 
 			this._jobs.push(job);
 
 			return;
 		}
 
-		await collection<ICron>('crons').insertOne({
+		await CronJobInformation.create<CronJobInformation>({
 			handlerId : job.handlerId,
 			lastRun   : job.lastRun,
 		});

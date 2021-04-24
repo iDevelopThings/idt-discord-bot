@@ -11,7 +11,7 @@ export default class UnMuter extends CronJob {
 
 		const now   = new Date();
 		// Get all mutes that expired in the last minute
-		const mutes = await ModerationLog.find({
+		const mutes = await ModerationLog.where<ModerationLog>({
 			type        : ModerationType.MUTE,
 			processedAt : null, // Not already processed
 			$or         : [
@@ -35,7 +35,7 @@ export default class UnMuter extends CronJob {
 					}
 				}
 			]
-		});
+		}).get();
 
 		for (const mute of mutes) {
 			// It's already ended so process it now
@@ -55,7 +55,7 @@ export default class UnMuter extends CronJob {
 	 Private Functions
 	 */
 
-	private async handleUnmute(mute: ModerationLogInstance) {
+	private async handleUnmute(mute: ModerationLog) {
 		// Only unmute the user if they don't have overlapping mutes active
 		if (await this.hasMuteActiveAfter(mute)) {
 			return;
@@ -66,17 +66,16 @@ export default class UnMuter extends CronJob {
 		await user.moderationManager().unmute();
 	}
 
-	private async hasMuteActiveAfter(mute: ModerationLogInstance) {
-		return !!await ModerationLog.collection()
-			.findOne({
-				_id          : {
-					$ne : mute._id
-				},
-				userId       : mute.userId,
-				'mute.endAt' : {
-					$gte : mute.mute.endAt
-				},
-				processedAt  : null
-			});
+	private async hasMuteActiveAfter(mute: ModerationLog) {
+		return !!await ModerationLog.findOne({
+			_id          : {
+				$ne : mute._id
+			},
+			userId       : mute.userId,
+			'mute.endAt' : {
+				$gte : mute.mute.endAt
+			},
+			processedAt  : null
+		});
 	}
 }
