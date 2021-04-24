@@ -64,8 +64,8 @@ export class Gambling extends GamblingInstance {
 
 		this._gameType = GamblingInstanceType.RED_BLACK;
 
-		//		this._startTimerLength = 30_000;
-		this._startTimerLength = 10_000;
+		this._startTimerLength = 30_000;
+		//		this._startTimerLength = 10_000;
 
 		this.setStartingTimerStartedHandler(this._onStarted.bind(this));
 		this.setStartTimerEndedHandler(this._onEnded.bind(this));
