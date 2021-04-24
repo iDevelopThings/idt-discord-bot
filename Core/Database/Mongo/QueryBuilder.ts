@@ -1,4 +1,4 @@
-import {Cursor, Decimal128, FilterQuery, FindOneOptions, UpdateManyOptions, UpdateQuery, WithoutProjection} from "mongodb";
+import {Cursor, Decimal128, FilterQuery, FindOneOptions, PushOperator, UpdateManyOptions, UpdateQuery, WithoutProjection} from "mongodb";
 import {ClassType, Ref} from "../index";
 import {hydrateModel} from "../Serialization/Serializer";
 import Model from "./Model";
@@ -20,7 +20,13 @@ export class QueryBuilder<T> {
 
 	private _model: Model<T>;
 
-	private _collectionFilter: object = null;
+	private _collectionFilter: object = {};
+
+	// $inc
+	private _collectionIncrement: object = {};
+
+	// $push
+	private _collectionPush: Map<string, object[]> = new Map<string, object[]>();
 
 	private _collectionAggregation: object[] = [];
 
@@ -111,6 +117,50 @@ export class QueryBuilder<T> {
 	}
 
 	/**
+	 * Allows us to add a $inc operation which is applied to the update call.
+	 *
+	 * @param {string} key
+	 * @param {string | number} amount
+	 * @return {this<T>}
+	 */
+	increment(key: string, amount: string | number) {
+		this._collectionIncrement[key] = Decimal128.fromString(amount.toString());
+
+		return this;
+	}
+
+	/**
+	 * Allows us to add a $inc operation which is applied to the update call.
+	 * Automatically inverts the amount passed in so it decrements the value.
+	 *
+	 * @param {string} key
+	 * @param {string | number} amount
+	 * @return {this<T>}
+	 */
+	decrement(key: string, amount: string | number) {
+		this._collectionIncrement[key] = Decimal128.fromString(`-${amount.toString()}`);
+
+		return this;
+	}
+
+	/**
+	 * Used for the $push operation... Not sure what else to explain 😅
+	 *
+	 * @param {string} key
+	 * @param {T} obj
+	 * @return {this<T>}
+	 */
+	push<T>(key: string, obj: T) {
+		if (!this._collectionPush.has(key)) {
+			this._collectionPush.set(key, []);
+		}
+
+		this._collectionPush.get(key).push(obj as any);
+
+		return this;
+	}
+
+	/**
 	 * When a filter has been specified with where(). It will apply to
 	 * {@see _collectionFilter} then when we make other calls, like
 	 * .get(), .first() or .count() it will resolve the cursor
@@ -181,15 +231,10 @@ export class QueryBuilder<T> {
 	 * @param options
 	 * @return boolean | UpdateWriteOpResult
 	 */
-	public async update(attributes: UpdateQuery<T> | Partial<T>, options?: UpdateManyOptions & { returnMongoResponse: boolean }) {
-
-		attributes['$currentDate']
-			? (attributes['$currentDate'].updatedAt = true)
-			: attributes['$currentDate'] = {updatedAt : true};
-
+	public async update(attributes: UpdateQuery<T> | Partial<T> = {}, options?: UpdateManyOptions & { returnMongoResponse: boolean }) {
 		const response = await this._model.collection().updateMany(
 			this._collectionFilter,
-			attributes,
+			this.buildUpdateQuery(attributes),
 			options
 		);
 
@@ -219,40 +264,79 @@ export class QueryBuilder<T> {
 		return this._model.collection().countDocuments(this._collectionFilter);
 	}
 
-	public increment(field: string, amount: string, minAmount: string | number = 0) {
-		const bulk = this._model.collection().initializeOrderedBulkOp();
+	/*
+	 Private Shit
+	 */
 
-		bulk.find(this._collectionFilter).updateOne({
-			$inc : {
-				[field] : Decimal128.fromString(amount)
+	/**
+	 * Build an update operation based on the varies calls to increment/push/update etc...
+	 *
+	 * @param {UpdateQuery<T>} query
+	 * @return {UpdateQuery<T>>}
+	 * @private
+	 */
+	private buildUpdateQuery(query: UpdateQuery<T>) {
+		const operation = {
+			$set         : query.$set,
+			$currentDate : Object.assign({}, query.$currentDate, {updatedAt : true}),
+			$inc         : Object.assign({}, this._collectionIncrement, query.$inc),
+			$push        : this.buildPushOperation(query.$push)
+		};
+
+		// Cleanup the query a little
+		for (const key in operation) {
+			if (operation[key] === undefined || operation[key] === null) {
+				delete operation[key];
+				continue;
 			}
-		});
 
-		bulk.find(this._collectionFilter).updateOne({
-			$max : {
-				[field] : Decimal128.fromString(minAmount.toString())
+			if (Array.isArray(operation[key]) && operation[key].length === 0) {
+				delete operation[key];
 			}
-		});
 
-		return bulk.execute();
+			if (typeof operation[key] === 'object' && Object.keys(operation[key]).length === 0) {
+				delete operation[key];
+			}
+		}
+
+		return operation;
 	}
 
-	public decrement(field: string, amount: string, minAmount: string | number = 0) {
-		const bulk = this._model.collection().initializeOrderedBulkOp();
+	/**
+	 * Combines $push operation from the update call with the individual calls o `QueryBuilder.push`
+	 *
+	 * @param {PushOperator<T>} push
+	 * @return {{}}
+	 * @private
+	 */
+	private buildPushOperation(push: PushOperator<T> = {}) {
+		const op = {};
 
-		bulk.find(this._collectionFilter).updateOne({
-			$inc : {
-				[field] : Decimal128.fromString(`-${amount}`)
+		for (const key in push) {
+			op[key] = push[key];
+		}
+
+		for (const [key, obj] of this._collectionPush) {
+			if (obj.length === 0) {
+				continue;
 			}
-		});
 
-		bulk.find(this._collectionFilter).updateOne({
-			$max : {
-				[field] : Decimal128.fromString(minAmount.toString())
+			if (op.hasOwnProperty(key)) {
+				if (!op[key].hasOwnProperty('$each')) {
+					op[key] = {
+						$each : [op[key]]
+					};
+				}
+
+				op[key].$each.push(...obj);
+				continue;
 			}
-		});
 
-		return bulk.execute();
+			op[key] = {
+				$each : obj
+			};
+		}
+
+		return op;
 	}
-
 }
