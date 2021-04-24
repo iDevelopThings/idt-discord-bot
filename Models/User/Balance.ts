@@ -21,36 +21,25 @@ export default class Balance {
 	}
 
 	hasBalance(amount: string, type: keyof IBalances = 'balance') {
-		return numbro(this.user.balances[type]).value() >= numbro(amount).value();
+		return numbro(this.user.balances[type].toString()).value() >= numbro(amount).value();
 	}
 
 	deductFromBalance(amount: string, type: keyof IBalances = 'balance') {
-		const finalAmount = numbro(this.user.balances[type])
-			.subtract(numbro(amount).value())
-			.value();
-
-		if (Number.isNaN(finalAmount)) {
-			this.user.balances[type] = '0';
-			return;
-		}
-
-		if (finalAmount < 0) {
-			this.user.balances[type] = '0';
-		} else {
-			this.user.balances[type] = String(finalAmount);
-		}
+		return this.user.queryBuilder()
+			.where({_id : this.user._id})
+			.decrement(
+				`balances.${type}`,
+				amount
+			);
 	}
 
 	addToBalance(amount: string, type: keyof IBalances = 'balance') {
-		if (Number(amount) < 0) {
-			throw new Error('You cannot add a minus to the balance');
-		}
-
-		const finalAmount = numbro(this.user.balances[type])
-			.add(numbro(amount).value())
-			.value();
-
-		this.user.balances[type] = String(finalAmount);
+		return this.user.queryBuilder()
+			.where({_id : this.user._id})
+			.increment(
+				`balances.${type}`,
+				amount
+			);
 	}
 
 	/**
@@ -81,7 +70,13 @@ export default class Balance {
 	 * @param {IBalanceHistory} history
 	 */
 	changed(history: IBalanceHistory) {
-		this.user.balanceHistory.push(history);
+		return this.user.queryBuilder()
+			.where({_id : this.user._id})
+			.update({
+				$push : {
+					balanceHistory : history
+				} as any
+			});
 	}
 
 	/**
@@ -93,15 +88,13 @@ export default class Balance {
 	async claimInvestment() {
 		const income = this.user.balanceManager().income();
 
-		this.user.balanceManager().addToBalance(String(income));
-		this.user.balanceManager().changed({
+		await this.user.balanceManager().addToBalance(String(income));
+		await this.user.balanceManager().changed({
 			amount       : String(income),
 			balanceType  : "balance",
 			typeOfChange : "added",
 			reason       : `Claimed investment income`
 		});
-		await this.user.save();
-
 		await this.user.cooldownManager().setUsed('claim');
 
 		return {income};

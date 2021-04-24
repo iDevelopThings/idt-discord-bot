@@ -103,8 +103,19 @@ export default class Skills {
 		this.user.skills[skill].xp += xp;
 		this.user.skills[skill].level = newLevel;
 
-		if (forceSave)
-			await this.user.save();
+		if (forceSave) {
+			await this.user.queryBuilder()
+				.where({_id : this.user._id})
+				.update({
+					$set : {
+						[`skills.${skill}.xp`]    : this.user.skills[skill].xp + xp,
+						[`skills.${skill}.level`] : newLevel
+					}
+				});
+		}
+
+		// if (forceSave)
+		// 	await this.user.save();
 	}
 
 

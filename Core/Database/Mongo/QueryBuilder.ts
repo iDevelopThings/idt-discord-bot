@@ -1,4 +1,4 @@
-import {Cursor, FilterQuery, FindOneOptions, UpdateManyOptions, UpdateQuery, WithoutProjection} from "mongodb";
+import {Cursor, Decimal128, FilterQuery, FindOneOptions, UpdateManyOptions, UpdateQuery, WithoutProjection} from "mongodb";
 import {ClassType, Ref} from "../index";
 import {hydrateModel} from "../Serialization/Serializer";
 import Model from "./Model";
@@ -219,5 +219,40 @@ export class QueryBuilder<T> {
 		return this._model.collection().countDocuments(this._collectionFilter);
 	}
 
+	public increment(field: string, amount: string, minAmount: string | number = 0) {
+		const bulk = this._model.collection().initializeOrderedBulkOp();
+
+		bulk.find(this._collectionFilter).updateOne({
+			$inc : {
+				[field] : Decimal128.fromString(amount)
+			}
+		});
+
+		bulk.find(this._collectionFilter).updateOne({
+			$max : {
+				[field] : Decimal128.fromString(minAmount.toString())
+			}
+		});
+
+		return bulk.execute();
+	}
+
+	public decrement(field: string, amount: string, minAmount: string | number = 0) {
+		const bulk = this._model.collection().initializeOrderedBulkOp();
+
+		bulk.find(this._collectionFilter).updateOne({
+			$inc : {
+				[field] : Decimal128.fromString(`-${amount}`)
+			}
+		});
+
+		bulk.find(this._collectionFilter).updateOne({
+			$max : {
+				[field] : Decimal128.fromString(minAmount.toString())
+			}
+		});
+
+		return bulk.execute();
+	}
 
 }
