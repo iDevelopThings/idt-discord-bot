@@ -42,7 +42,7 @@ export const formatMoney = (i, specific = false) => {
 		currencyPosition : "prefix",
 	});
 
-	if (value === '$NaN') {
+	if (value === '$NaN' || value === '-$aN') {
 		return '$0';
 	}
 
