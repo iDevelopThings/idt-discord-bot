@@ -17,7 +17,7 @@ export default class Balance extends SlashCommand {
 			options        : [
 				{
 					name        : 'get',
-					description : 'Get the current balance of yourself or anothe user.',
+					description : 'Get the current balance of yourself or another user.',
 					type        : CommandOptionType.SUB_COMMAND,
 					options     : [
 						{
