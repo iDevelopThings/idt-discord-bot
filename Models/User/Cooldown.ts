@@ -2,9 +2,9 @@ import {createDuration, dayjs} from "../../Util/Date";
 import User from "./User";
 
 export interface ITimeStates {
-	claim?: string;
-	withdrawInvestment?: string;
-	botHack?: string;
+	claim?: Date;
+	withdrawInvestment?: Date;
+	botHack?: Date;
 }
 
 export const TimeStates = {
@@ -22,7 +22,7 @@ export default class Cooldown {
 
 	setUsed(state: TimeStateName) {
 		this.user.queuedBuilder().set({
-			[`cooldowns.${state}`] : dayjs().add(TimeStates[state]).format()
+			[`cooldowns.${state}`] : dayjs().add(TimeStates[state]).toDate()
 		});
 	}
 

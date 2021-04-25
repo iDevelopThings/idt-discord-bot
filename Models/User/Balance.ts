@@ -25,9 +25,10 @@ export default class Balance {
 	}
 
 	hasBalance(amount: SomeFuckingValue, type: keyof IBalances = 'balance') {
-		amount = NumberInput.someFuckingValueToString(amount);
+		amount        = NumberInput.someFuckingValueToString(amount);
+		const balance = NumberInput.someFuckingValueToString(this.user.balances[type]);
 
-		return numbro(this.user.balances[type]).value() >= numbro(amount).value();
+		return numbro(balance).value() >= numbro(amount).value();
 	}
 
 	deductFromBalance(amount: SomeFuckingValue, reason: string, type: keyof IBalances = 'balance') {
@@ -125,7 +126,6 @@ export default class Balance {
 			`statistics.balance.mostInvested`, String(amountValue - currentMost)
 		);
 	}
-
 
 
 }

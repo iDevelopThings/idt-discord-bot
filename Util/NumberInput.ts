@@ -8,7 +8,7 @@ export type SomeFuckingValue = string | number | Decimal128;
 export default class NumberInput {
 	private _value: string = "0";
 
-	private _balanceType: "balance" | "invested" = "balance";
+	private _balanceType: keyof IBalances = "balance";
 
 	private _validationError: InvalidNumberResponse | string = null;
 
@@ -44,9 +44,14 @@ export default class NumberInput {
 			return this;
 		}
 
-		if (!this.user.balanceManager().hasBalance(amountFormatted)) {
-			this._validationError = InvalidNumberResponse.NOT_ENOUGH_BALANCE
-				+ ` You need ${formatMoney(amountFormatted, true)}.`;
+		if (!this.user.balanceManager().hasBalance(amountFormatted, this._balanceType)) {
+			if (this._balanceType === 'invested') {
+				this._validationError = InvalidNumberResponse.NOT_ENOUGH_INVESTMENT
+					+ ` You need ${formatMoney(amountFormatted, true)}.`;
+			} else {
+				this._validationError = InvalidNumberResponse.NOT_ENOUGH_BALANCE
+					+ ` You need ${formatMoney(amountFormatted, true)}.`;
+			}
 
 			return this;
 		}
@@ -74,22 +79,24 @@ export default class NumberInput {
 		// If the number is a %, we'll get x percent of the users balance
 		if (typeof value === 'string' && value.includes('%')) {
 			const balance = NumberInput.someFuckingValueToString(this.user.balances[this._balanceType]);
-			value         = percentOf(
+
+			value = percentOf(
 				balance,
 				value
 			);
 		}
 
-
 		const amountFormatted = numbroParse(value, {output : 'currency'});
 
 		if (amountFormatted <= 0) {
 			this._validationError = InvalidNumberResponse.MUST_BE_MORE_THAN_ZERO;
+
 			return this;
 		}
 
 		if (!amountFormatted) {
 			this._validationError = InvalidNumberResponse.INVALID_AMOUNT;
+
 			return this;
 		}
 
@@ -121,6 +128,7 @@ export default class NumberInput {
 			average  : false,
 			output   : "number"
 		}).toString();
+
 		return Decimal128.fromString(parsed);
 	}
 

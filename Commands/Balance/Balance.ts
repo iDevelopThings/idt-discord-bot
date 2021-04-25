@@ -1,9 +1,10 @@
-import {MessageEmbed, TextChannel} from "discord.js";
+import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
-import {getChannel, guild, guildId} from "../../Util/Bot";
-import {formatMoney, InvalidNumberResponse, isValidNumber, numbroParse} from "../../Util/Formatter";
+import {BalanceHistoryChangeType} from "../../Models/User/UserInformationInterfaces";
+import {getChannel, guildId} from "../../Util/Bot";
+import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 import NumberInput from "../../Util/NumberInput";
 
 export default class Balance extends SlashCommand {
@@ -16,36 +17,30 @@ export default class Balance extends SlashCommand {
 			options        : [
 				{
 					name        : 'get',
-					description : 'Get your balance',
-					type        : CommandOptionType.SUB_COMMAND,
-				},
-				{
-					name        : 'user',
-					description : 'Get a users balance',
+					description : 'Get the current balance of yourself or another user.',
 					type        : CommandOptionType.SUB_COMMAND,
 					options     : [
 						{
 							name        : 'user',
-							required    : true,
-							description : 'The user to get the balance of',
+							description : 'If you want to see another users balance.',
 							type        : CommandOptionType.USER,
 						}
 					]
 				},
 				{
 					name        : 'gift',
-					description : 'Gift some of your balance to another user',
+					description : 'Gift some of your balance to another user.',
 					type        : CommandOptionType.SUB_COMMAND,
 					options     : [
 						{
 							name        : 'user',
-							description : 'The user to gift some balance too',
+							description : 'The user to gift some balance too.',
 							required    : true,
 							type        : CommandOptionType.USER,
 						},
 						{
 							name        : 'amount',
-							description : 'The amount to gift the user',
+							description : 'The amount to gift the user.',
 							required    : true,
 							type        : CommandOptionType.STRING
 						}
@@ -53,12 +48,12 @@ export default class Balance extends SlashCommand {
 				},
 				{
 					name        : 'history',
-					description : 'See the balance change history for yourself or another user',
+					description : 'See the balance change history for yourself or another user.',
 					type        : CommandOptionType.SUB_COMMAND,
 					options     : [
 						{
 							name        : 'user',
-							description : 'If you want to see another users history ',
+							description : 'If you want to see another users history.',
 							required    : false,
 							type        : CommandOptionType.USER,
 						}
@@ -66,6 +61,7 @@ export default class Balance extends SlashCommand {
 				},
 			]
 		});
+
 		this.filePath = __filename;
 	}
 
@@ -76,39 +72,38 @@ export default class Balance extends SlashCommand {
 			return `You can only use /balance commands in the ${gambleChannel.toString()} channel.`;
 		}
 
-		if (ctx.subcommands.includes('get')) {
-			const user = await User.getOrCreate(ctx.user.id);
+		switch (ctx.subcommands[0]) {
+			case 'get': {
+				const userObj = ctx.options.get as { user: string };
+				const user    = await User.getOrCreate(userObj?.user ?? ctx.user.id);
 
-			return await this.handleBalanceOutput(ctx, user);
+				return this.handleBalanceOutput(ctx, user);
+			}
+			case 'gift': {
+				const options     = ctx.options.gift as { user: string; amount: string; };
+				const otherUser   = await User.getOrCreate(options.user);
+				const currentUser = await User.getOrCreate(ctx.user.id);
+
+				return await this.handleGiftBalance(ctx, options.amount, currentUser, otherUser);
+			}
+			case 'history': {
+				const options = ctx.options.history as { user?: string; };
+
+				return await this.handleHistory(ctx, options.user);
+			}
 		}
 
-		if (ctx.subcommands.includes('user')) {
-			const userObj = ctx.options.user as { user: string };
-			const user    = await User.getOrCreate(userObj.user);
-
-			return await this.handleBalanceOutput(ctx, user);
-		}
-
-		if (ctx.subcommands.includes('gift')) {
-			const options     = ctx.options.gift as { user: string; amount: string; };
-			const otherUser   = await User.getOrCreate(options.user);
-			const currentUser = await User.getOrCreate(ctx.user.id);
-
-			return await this.handleGiftBalance(ctx, options.amount, currentUser, otherUser);
-		}
-
-		if (ctx.subcommands.includes('history')) {
-			const options = ctx.options.history as { user?: string; };
-
-			return await this.handleHistory(ctx, options.user);
-		}
-
-		return "You need to use one of the sub commands. /balance gift, /balance user or /balance get";
+		return "You need to use one of the sub commands. /balance get, /balance gift, /balance history or /balance user";
 	}
 
+	/**
+	 *
+	 * @param {CommandContext} ctx
+	 * @param {User} user
+	 * @return {Promise<void>}
+	 * @private
+	 */
 	private async handleBalanceOutput(ctx: CommandContext, user: User) {
-		const channel = guild().channels.cache.get(ctx.channelID) as TextChannel;
-
 		const embed = new MessageEmbed()
 			.setColor('BLUE')
 			.setAuthor(user.username, user.avatar, "")
@@ -119,8 +114,16 @@ export default class Balance extends SlashCommand {
 		await ctx.send({embeds : [embed]});
 	}
 
+	/**
+	 *
+	 * @param {CommandContext} ctx
+	 * @param {string} amount
+	 * @param {User} currentUser
+	 * @param {User} otherUser
+	 * @return {Promise<string | InvalidNumberResponse>}
+	 * @private
+	 */
 	private async handleGiftBalance(ctx: CommandContext, amount: string, currentUser: User, otherUser: User) {
-
 		const isValid = isValidNumber(amount, currentUser.balanceManager());
 
 		if (isValid !== InvalidNumberResponse.IS_VALID) {
@@ -133,17 +136,21 @@ export default class Balance extends SlashCommand {
 			return input.error();
 		}
 
-
 		currentUser.balanceManager().deductFromBalance(input.value(), `Gifted money to ${otherUser.username}`);
-		await currentUser.executeQueued();
-
 		otherUser.balanceManager().addToBalance(input.value(), `Gifted by ${currentUser.username}`);
-		await otherUser.executeQueued();
 
+		await Promise.all([currentUser.executeQueued(), otherUser.executeQueued()]);
 
 		return `You gave ${otherUser.toString()} ${formatMoney(amount)}`;
 	}
 
+	/**
+	 *
+	 * @param {CommandContext} ctx
+	 * @param {string} otherUserId
+	 * @return {Promise<string>}
+	 * @private
+	 */
 	private async handleHistory(ctx: CommandContext, otherUserId?: string) {
 		const user = await User.getOrCreate(otherUserId ? otherUserId : ctx.user.id);
 
@@ -161,9 +168,9 @@ export default class Balance extends SlashCommand {
 			const balanceHistory = user.balanceHistory.slice(-10);
 
 			for (let i = 0; i < balanceHistory.length; i++) {
-				const history = balanceHistory[i];
+				const history      = balanceHistory[i];
+				const typeOfChange = history.typeOfChange === BalanceHistoryChangeType.ADDED ? 'to' : 'from';
 
-				const typeOfChange = history.typeOfChange === 'added' ? 'to' : 'from';
 				embed.addField(
 					`#${user.balanceHistory.length - (balanceHistory.length - i - 1)} - ${history.typeOfChange} ${formatMoney(history.amount)} ${typeOfChange} ${history.balanceType}`,
 					history.reason

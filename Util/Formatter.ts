@@ -35,12 +35,18 @@ export const numbroParse = (i: string, options?: Format | string) => {
 };
 
 export const formatMoney = (i, specific = false) => {
-	return numbro(i).formatCurrency({
+	const value = numbro(i).formatCurrency({
 		average          : specific === false,
 		mantissa         : 2,
 		optionalMantissa : specific === false,
 		currencyPosition : "prefix",
 	});
+
+	if (value === '$NaN' || value === '-$aN') {
+		return '$0';
+	}
+
+	return value;
 };
 
 export const formatPercentage = (i) => {
@@ -61,6 +67,7 @@ export enum InvalidNumberResponse {
 	MUST_BE_MORE_THAN_ZERO = 'Amount should be more than 0.',
 	INVALID_AMOUNT         = 'Invalid amount.',
 	NOT_ENOUGH_BALANCE     = 'Not enough money.',
+	NOT_ENOUGH_INVESTMENT  = 'Not enough investment.',
 	IS_VALID               = 'it is correcto'
 }
 
@@ -75,11 +82,11 @@ export const isValidNumber = (amount: string, balanceManager?: Balance): Invalid
 		return InvalidNumberResponse.INVALID_AMOUNT;
 	}
 
-//	if (balanceManager) {
-//		if (!balanceManager.hasBalance(numbro(amount).value())) {
-//			return InvalidNumberResponse.NOT_ENOUGH_BALANCE + ` You need ${formatMoney(amount, true)}.`;
-//		}
-//	}
+	//	if (balanceManager) {
+	//		if (!balanceManager.hasBalance(numbro(amount).value())) {
+	//			return InvalidNumberResponse.NOT_ENOUGH_BALANCE + ` You need ${formatMoney(amount, true)}.`;
+	//		}
+	//	}
 
 	return InvalidNumberResponse.IS_VALID;
 };
