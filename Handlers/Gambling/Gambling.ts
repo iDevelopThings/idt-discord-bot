@@ -1,8 +1,7 @@
 import {ColorResolvable, Message, MessageEmbed} from "discord.js";
-import {Decimal128} from "mongodb";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
-import {formatMoney, InvalidNumberResponse, isValidNumber, numbro, Numbro, numbroParse} from "../../Util/Formatter";
+import {formatMoney, numbro, Numbro} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
 import {GamblingInstance, GamblingStatus} from "./GamblingInstance";
@@ -421,5 +420,4 @@ export class Gambling extends GamblingInstance {
 
 		return numbro(existingBet.amount).add(Number(amount)).value();
 	}
-
 }
