@@ -30,6 +30,8 @@ export interface SuccessfulResponse {
 
 export default abstract class IllegalActivity {
 
+	abstract title(): string;
+
 	abstract name(): ActivityName;
 
 	abstract runsFor(): Duration;

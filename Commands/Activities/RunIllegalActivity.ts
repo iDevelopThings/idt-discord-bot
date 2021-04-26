@@ -3,6 +3,7 @@ import CommandContext, {MessageOptions} from "slash-create/lib/context";
 import {ActivityName} from "../../Models/User/Activities";
 import User from "../../Models/User/User";
 import {guildId} from "../../Util/Bot";
+import {formatMoney} from "../../Util/Formatter";
 
 export const illegalActivityChoices = [
 	{
@@ -46,14 +47,14 @@ export default class RunIllegalActivity extends SlashCommand {
 	async run(ctx: CommandContext): Promise<MessageOptions | string> {
 		const user = await User.getOrCreate(ctx.user.id);
 
-		switch(ctx.subcommands[0]) {
+		switch (ctx.subcommands[0]) {
 			case 'illegal_activity':
 				return this.startIllegalActivity(ctx, user);
 		}
 	}
 
 	async startIllegalActivity(ctx: CommandContext, user: User) {
-		const options = ctx.options.illegal_activity as IllegalActivity;
+		const options          = ctx.options.illegal_activity as IllegalActivity;
 		const handler          = user.activityManager().handlerForActivity(options.type);
 		const {isAble, reason} = await handler.canStart(user);
 
@@ -63,6 +64,6 @@ export default class RunIllegalActivity extends SlashCommand {
 
 		await handler.start(user);
 
-		return 'Yeet';
+		return `You payed ${formatMoney(handler.startingCost().value())} upfront and started the ${handler.title()}.`;
 	}
 }
