@@ -4,7 +4,8 @@ import {SkillRequirements} from "../../Models/User/Skills";
 import {createDuration} from "../../Util/Date";
 import {formatMoney, Numbro, numbro} from "../../Util/Formatter";
 import {getRandomInt} from "../../Util/Random";
-import IllegalActivity, {RandomEventNames, RandomEvents, SuccessfulResponse} from "./IllegalActivity";
+import IllegalActivity, {CompletionChances, RandomEventNames, RandomEvents, SuccessfulResponse} from "./IllegalActivity";
+
 
 export default class RaidLocalCannabisFarm extends IllegalActivity {
 
@@ -46,16 +47,26 @@ export default class RaidLocalCannabisFarm extends IllegalActivity {
 		return numbro('10000');
 	}
 
+	public getCompletionChances(): CompletionChances {
+		return {
+			regular : {min : 10, max : 20},
+			lucky   : {min : 15, max : 25},
+			money   : {min : 600, max : 1000}
+		};
+	}
+
 	public async getMessageAndBalanceGain(): Promise<SuccessfulResponse> {
-		let randomPlantsNumber = getRandomInt(10, 20);
-		if (randomPlantsNumber > 15) {
-			randomPlantsNumber = getRandomInt(15, 25);
+		const chances = this.getCompletionChances();
+
+		let randomPlantsNumber = getRandomInt(chances.regular.min, chances.regular.max);
+		if (randomPlantsNumber > chances.lucky.min) {
+			randomPlantsNumber = getRandomInt(chances.lucky.min, chances.lucky.max);
 		}
-		const costForPlants = randomPlantsNumber * getRandomInt(600, 1000);
+		const costForPlants = randomPlantsNumber * getRandomInt(chances.money.min, chances.money.max);
 
 		let message = `You just about got away, the owner came for your ass. You stole ${randomPlantsNumber} plants, they're worth a total of ${formatMoney(costForPlants)}`;
 
-		if (randomPlantsNumber > 25) {
+		if (randomPlantsNumber > chances.lucky.min) {
 			message = `You managed to get away with the raid... You got extremely lucky stole ${randomPlantsNumber} plants, they're worth a total of ${formatMoney(costForPlants)}`;
 		}
 

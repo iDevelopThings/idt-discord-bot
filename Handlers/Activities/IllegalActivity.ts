@@ -1,6 +1,6 @@
 import {Log} from "@envuso/common";
 import {Duration} from "dayjs/plugin/duration";
-import {MessageEmbed} from "discord.js";
+import {ColorResolvable, MessageEmbed} from "discord.js";
 import {ActivityName, IActivities} from "../../Models/User/Activities";
 import {SkillName, SkillRequirements} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
@@ -9,7 +9,13 @@ import {dayjs, timeRemaining} from "../../Util/Date";
 import {formatMoney, Numbro, percentOf, title} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
+import RaidLocalCannabisFarm from "./RaidLocalCannabisFarm";
 
+export interface CompletionChances {
+	regular: { min: number; max: number };
+	lucky: { min: number; max: number };
+	money: { min: number; max: number };
+}
 
 export type RandomEventInformation = {
 	name: RandomEventNames;
@@ -29,12 +35,38 @@ export interface SuccessfulResponse {
 	message: string
 }
 
+interface ActivitiesListItem {
+	name: string;
+	value: string;
+	class: typeof IllegalActivity;
+	classInstance: (user: User) => IllegalActivity;
+	color: ColorResolvable;
+}
+
 export default abstract class IllegalActivity {
 
 	private activityInformation: IActivities;
 
 	constructor(activityInformation: IActivities) {
 		this.activityInformation = activityInformation;
+	}
+
+	static activities(): ActivitiesListItem[] {
+		return [
+			{
+				name          : 'Raid local cannabis farm',
+				value         : 'raid_local_cannabis',
+				class         : RaidLocalCannabisFarm,
+				color         : "GREEN",
+				classInstance : (user: User) => new RaidLocalCannabisFarm(
+					user.activityManager().get('raid_local_cannabis')
+				)
+			}
+		];
+	}
+
+	static activitiesForCommandChoices() {
+		return this.activities().map(({name, value}) => ({name, value}));
 	}
 
 	abstract title(): string;
@@ -82,6 +114,8 @@ export default abstract class IllegalActivity {
 			reason : 'none'
 		};
 	}
+
+	abstract getCompletionChances(): CompletionChances;
 
 	start(user: User) {
 		return user.activityManager()
