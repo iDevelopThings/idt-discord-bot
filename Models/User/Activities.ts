@@ -30,6 +30,13 @@ export default class Activities {
 		return dayjs().isAfter(this.get(name).endsAt);
 	}
 
+	timeRemaining(name : ActivityName){
+		if(!this.hasActivity(name))
+			return null;
+
+		return dayjs(this.get(name).endsAt).fromNow(true);
+	}
+
 	public setStarted(name: ActivityName, activityHandler: IllegalActivity) {
 		this.user.queuedBuilder()
 			.set({

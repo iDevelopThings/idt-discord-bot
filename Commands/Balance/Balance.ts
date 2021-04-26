@@ -3,7 +3,7 @@ import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
 import {BalanceHistoryChangeType} from "../../Models/User/UserInformationInterfaces";
-import {getChannel, guildId} from "../../Util/Bot";
+import {getChannel, guildId, isOneOfChannels} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 import NumberInput from "../../Util/NumberInput";
 
@@ -66,10 +66,9 @@ export default class Balance extends SlashCommand {
 	}
 
 	async run(ctx: CommandContext) {
-		const gambleChannel = getChannel('gambling');
 
-		if (ctx.channelID !== gambleChannel?.id) {
-			return `You can only use /balance commands in the ${gambleChannel.toString()} channel.`;
+		if(!isOneOfChannels(ctx.channelID, 'activities', 'gambling')){
+			return 'You can only use /balance commands in activities or gambling.';
 		}
 
 		switch (ctx.subcommands[0]) {
