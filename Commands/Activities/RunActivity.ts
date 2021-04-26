@@ -1,14 +1,13 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext, {MessageOptions} from "slash-create/lib/context";
-import IllegalActivity from "../../Handlers/Activities/IllegalActivity";
+import Activity, {ActivityType} from "../../Handlers/Activities/Activity";
 import {ActivityName} from "../../Models/User/Activities";
 import User from "../../Models/User/User";
 import {getChannelById, guildId, isOneOfChannels} from "../../Util/Bot";
 import {formatMoney} from "../../Util/Formatter";
 
-
-export default class RunIllegalActivity extends SlashCommand {
+export default class RunActivity extends SlashCommand {
 	constructor(creator) {
 		super(creator, {
 			deferEphemeral : true,
@@ -19,15 +18,36 @@ export default class RunIllegalActivity extends SlashCommand {
 				{
 					name        : 'start',
 					description : 'Start an activity',
-					type        : CommandOptionType.SUB_COMMAND,
+					type        : CommandOptionType.SUB_COMMAND_GROUP,
 					options     : [
 						{
-							name        : 'type',
-							description : 'The type of activity',
-							required    : true,
-							type        : CommandOptionType.STRING,
-							choices     : IllegalActivity.activitiesForCommandChoices()
-						}
+							name        : 'legal',
+							description : 'Start a legal activity',
+							type        : CommandOptionType.SUB_COMMAND,
+							options     : [
+								{
+									name        : 'type',
+									description : 'The activity to start',
+									required    : true,
+									type        : CommandOptionType.STRING,
+									choices     : Activity.activitiesForCommandChoices(ActivityType.LEGAL)
+								}
+							]
+						},
+						{
+							name        : 'illegal',
+							description : 'Start an illegal activity',
+							type        : CommandOptionType.SUB_COMMAND,
+							options     : [
+								{
+									name        : 'type',
+									description : 'The activity to start',
+									required    : true,
+									type        : CommandOptionType.STRING,
+									choices     : Activity.activitiesForCommandChoices(ActivityType.ILLEGAL)
+								}
+							]
+						},
 					]
 				},
 				{
@@ -50,15 +70,15 @@ export default class RunIllegalActivity extends SlashCommand {
 
 		switch (ctx.subcommands[0]) {
 			case 'start':
-				return this.startIllegalActivity(ctx, user);
+				return this.startActivity(ctx, user);
 			case "list":
 				await this.listActivities(ctx, user);
 		}
 	}
 
-	async startIllegalActivity(ctx: CommandContext, user: User) {
-		const options          = ctx.options.start as { type: ActivityName; };
-		const handler          = user.activityManager().handlerForActivity(options.type);
+	async startActivity(ctx: CommandContext, user: User) {
+		const options          = ctx.options.start as unknown as IStartOptions;
+		const handler          = user.activityManager().handlerForActivity(options.legal?.type ?? options.illegal?.type);
 		const {isAble, reason} = await handler.canStart(user);
 
 		if (!isAble) {
@@ -71,10 +91,9 @@ export default class RunIllegalActivity extends SlashCommand {
 	}
 
 	private async listActivities(ctx: CommandContext, user: User) {
-
 		const embeds = [];
 
-		for (let illegalActivityChoice of IllegalActivity.activities()) {
+		for (let illegalActivityChoice of Activity.activities()) {
 			const instance = illegalActivityChoice.classInstance(user);
 			const chance   = instance.getCompletionChances();
 
@@ -103,5 +122,14 @@ export default class RunIllegalActivity extends SlashCommand {
 		await ctx.delete();
 
 		await getChannelById(ctx.channelID).send(embeds);
+	}
+}
+
+export interface IStartOptions {
+	legal?: {
+		type: ActivityName
+	},
+	illegal?: {
+		type: ActivityName
 	}
 }

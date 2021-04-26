@@ -2,14 +2,14 @@ import {Log} from "@envuso/common";
 import {Duration} from "dayjs/plugin/duration";
 import {ColorResolvable, MessageEmbed} from "discord.js";
 import {ActivityName, IActivities} from "../../Models/User/Activities";
-import {SkillName, SkillRequirements} from "../../Models/User/Skills";
+import {SkillRequirements} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
 import {getChannel, guild} from "../../Util/Bot";
 import {dayjs, timeRemaining} from "../../Util/Date";
 import {formatMoney, Numbro, percentOf, title} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
-import RaidLocalCannabisFarm from "./RaidLocalCannabisFarm";
+import RaidLocalCannabisFarm from "./Illegal/RaidLocalCannabisFarm";
 
 export interface CompletionChances {
 	regular: { min: number; max: number };
@@ -28,6 +28,12 @@ export enum RandomEventNames {
 	COPS = "Cops"
 }
 
+export enum ActivityType {
+	LEGAL,
+	ILLEGAL,
+	ALL = LEGAL | ILLEGAL
+}
+
 export type RandomEvents = RandomEventInformation[];
 
 export interface SuccessfulResponse {
@@ -38,12 +44,13 @@ export interface SuccessfulResponse {
 interface ActivitiesListItem {
 	name: string;
 	value: string;
-	class: typeof IllegalActivity;
-	classInstance: (user: User) => IllegalActivity;
+	class: typeof Activity;
+	classInstance: (user: User) => Activity;
 	color: ColorResolvable;
 }
 
-export default abstract class IllegalActivity {
+export default abstract class Activity {
+	public static type: ActivityType = ActivityType.LEGAL;
 
 	private activityInformation: IActivities;
 
@@ -65,8 +72,14 @@ export default abstract class IllegalActivity {
 		];
 	}
 
-	static activitiesForCommandChoices() {
-		return this.activities().map(({name, value}) => ({name, value}));
+	static activitiesForCommandChoices(type: ActivityType = ActivityType.ALL) {
+		let activities = this.activities();
+
+		if (type !== ActivityType.ALL) {
+			activities = activities.filter(activity => activity.class.type === type);
+		}
+
+		return activities.map(({name, value}) => ({name, value}));
 	}
 
 	abstract title(): string;

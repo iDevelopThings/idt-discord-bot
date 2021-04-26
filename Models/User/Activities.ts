@@ -1,5 +1,5 @@
-import IllegalActivity from "../../Handlers/Activities/IllegalActivity";
-import RaidLocalCannabisFarm from "../../Handlers/Activities/RaidLocalCannabisFarm";
+import Activity from "../../Handlers/Activities/Activity";
+import RaidLocalCannabisFarm from "../../Handlers/Activities/Illegal/RaidLocalCannabisFarm";
 import {dayjs} from "../../Util/Date";
 import User from "./User";
 
@@ -37,7 +37,7 @@ export default class Activities {
 		return dayjs(this.get(name).endsAt).fromNow(true);
 	}
 
-	public setStarted(name: ActivityName, activityHandler: IllegalActivity) {
+	public setStarted(name: ActivityName, activityHandler: Activity) {
 		this.user.queuedBuilder()
 			.set({
 				[`activities.${name}`] : {
