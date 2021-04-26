@@ -48,12 +48,39 @@ export default class RunActivity extends SlashCommand {
 								}
 							]
 						},
+						{
+							name        : 'heist',
+							description : 'Start a heist',
+							type        : CommandOptionType.SUB_COMMAND,
+							options     : [
+								{
+									name        : 'type',
+									description : 'The heist to start',
+									required    : true,
+									type        : CommandOptionType.STRING,
+									choices     : Activity.activitiesForCommandChoices(ActivityType.HEIST)
+								}
+							]
+						},
 					]
 				},
 				{
 					name        : 'list',
 					description : 'List all activities',
 					type        : CommandOptionType.SUB_COMMAND,
+					options     : [
+						{
+							name        : 'type',
+							description : 'The type of activity',
+							required    : true,
+							type        : CommandOptionType.INTEGER,
+							choices     : [
+								{name : 'Legal', value : ActivityType.LEGAL},
+								{name : 'Illegal', value : ActivityType.ILLEGAL},
+								{name : 'Heist', value : ActivityType.HEIST},
+							]
+						}
+					]
 				}
 			]
 		});
@@ -71,14 +98,16 @@ export default class RunActivity extends SlashCommand {
 		switch (ctx.subcommands[0]) {
 			case 'start':
 				return this.startActivity(ctx, user);
-			case "list":
-				await this.listActivities(ctx, user);
+			case 'list':
+				return this.listActivities(ctx, user);
 		}
 	}
 
 	async startActivity(ctx: CommandContext, user: User) {
 		const options          = ctx.options.start as unknown as IStartOptions;
-		const handler          = user.activityManager().handlerForActivity(options.legal?.type ?? options.illegal?.type);
+		const handler          = user.activityManager().handlerForActivity(
+			options.legal?.type ?? options.illegal?.type ?? options.heist?.type
+		);
 		const {isAble, reason} = await handler.canStart(user);
 
 		if (!isAble) {
@@ -91,10 +120,15 @@ export default class RunActivity extends SlashCommand {
 	}
 
 	private async listActivities(ctx: CommandContext, user: User) {
-		const embeds = [];
+		const options = ctx.options.list as unknown as IListOptions;
+		const embeds  = [];
 
-		for (let illegalActivityChoice of Activity.activities()) {
-			const instance = illegalActivityChoice.classInstance(user);
+		for (const activity of Activity.activities()) {
+			if (activity.class.type !== options.type) {
+				continue;
+			}
+
+			const instance = activity.classInstance(user);
 			const chance   = instance.getCompletionChances();
 
 			const hasActive = user.activityManager().hasActivity(instance.name());
@@ -103,7 +137,7 @@ export default class RunActivity extends SlashCommand {
 			embeds.push(
 				new MessageEmbed()
 					.setTitle(instance.title())
-					.setColor(illegalActivityChoice.color)
+					.setColor(activity.color)
 					.addField('Starting Cost: ', formatMoney(instance.startingCost().value()))
 					.addField('Min', '↓')
 					.addField('Min Percent', `${chance.regular.min}-${chance.lucky.min}`, true)
@@ -115,7 +149,10 @@ export default class RunActivity extends SlashCommand {
 					.addField('Is active?', hasActive ? 'Yes' : 'No', true)
 					.addField('Ends In', hasActive ? endsIn : 'Not started.', true)
 			);
+		}
 
+		if (embeds.length === 0) {
+			return 'There are no activities of this type available yet :(';
 		}
 
 		await ctx.defer(false);
@@ -128,8 +165,15 @@ export default class RunActivity extends SlashCommand {
 export interface IStartOptions {
 	legal?: {
 		type: ActivityName
-	},
+	};
 	illegal?: {
 		type: ActivityName
-	}
+	};
+	heist?: {
+		type: ActivityName
+	};
+}
+
+export interface IListOptions {
+	type: ActivityType;
 }

@@ -1,6 +1,6 @@
 import {Log} from "@envuso/common";
 import {FilterQuery} from "mongodb";
-import Activity, {ActivityType} from "../Handlers/Activities/Activity";
+import Activity from "../Handlers/Activities/Activity";
 import CronJob from "../Handlers/CronJob/CronJob";
 import {ActivityName} from "../Models/User/Activities";
 import User from "../Models/User/User";
@@ -22,7 +22,7 @@ export default class ActivityEnded extends CronJob {
 				if (handler.hasEnded()) {
 					await handler.handleCompletion(user);
 
-					Log.info(`Completed activity "${handler.name()}" for ${user.displayName}`);
+					Log.info(`Completed activity "${handler.title()}" for ${user.displayName}`);
 
 					continue;
 				}

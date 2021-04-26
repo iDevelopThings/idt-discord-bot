@@ -31,7 +31,7 @@ export enum RandomEventNames {
 export enum ActivityType {
 	LEGAL,
 	ILLEGAL,
-	ALL = LEGAL | ILLEGAL
+	HEIST
 }
 
 export type RandomEvents = RandomEventInformation[];
@@ -64,7 +64,7 @@ export default abstract class Activity {
 				name          : 'Raid local cannabis farm',
 				value         : 'raid_local_cannabis',
 				class         : RaidLocalCannabisFarm,
-				color         : "GREEN",
+				color         : 'GREEN',
 				classInstance : (user: User) => new RaidLocalCannabisFarm(
 					user.activityManager().get('raid_local_cannabis')
 				)
@@ -72,10 +72,10 @@ export default abstract class Activity {
 		];
 	}
 
-	static activitiesForCommandChoices(type: ActivityType = ActivityType.ALL) {
+	static activitiesForCommandChoices(type?: ActivityType) {
 		let activities = this.activities();
 
-		if (type !== ActivityType.ALL) {
+		if (!!type) {
 			activities = activities.filter(activity => activity.class.type === type);
 		}
 
@@ -100,7 +100,7 @@ export default abstract class Activity {
 		if (manager.hasActivity(this.name()) && !manager.hasEnded(this.name())) {
 			return {
 				isAble : false,
-				reason : `${title(this.name())} is still in progress... it will finish in ${timeRemaining(manager.get(this.name()).endsAt)}`
+				reason : `${this.title()} is still in progress... it will finish in ${timeRemaining(manager.get(this.name()).endsAt)}`
 			};
 		}
 
@@ -118,7 +118,7 @@ export default abstract class Activity {
 		if (!user.balanceManager().hasBalance(this.startingCost().value())) {
 			return {
 				isAble : false,
-				reason : `${title(this.name())} will cost ${formatMoney(this.startingCost())} to purchase the required assets... you cannot afford this right now.`
+				reason : `${this.title()} will cost ${formatMoney(this.startingCost())} to purchase the required assets... you cannot afford this right now.`
 			};
 		}
 
@@ -136,7 +136,7 @@ export default abstract class Activity {
 			.balanceManager()
 			.deductFromBalance(
 				this.startingCost().value(),
-				`Started activity - ${title(this.name())}`
+				`Started activity - ${this.title()}`
 			)
 			.executeQueued();
 	}
@@ -210,7 +210,7 @@ export default abstract class Activity {
 
 		user.balanceManager().addToBalance(
 			NumberInput.someFuckingValueToString(response.moneyGained),
-			`Successfully completed ${title(this.name())}`
+			`Successfully completed ${this.title()}`
 		);
 		user.activityManager().removeActivity(this.name());
 		await user.executeQueued();
