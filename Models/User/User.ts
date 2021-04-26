@@ -2,6 +2,7 @@ import {Log} from "@envuso/common";
 import {ObjectId} from "mongodb";
 import {id} from "../../Core/Database/ModelDecorators";
 import Model from "../../Core/Database/Mongo/Model";
+import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import {guild} from "../../Util/Bot";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import Moderation from "../Moderation/Moderation";
@@ -137,6 +138,10 @@ export default class User extends Model<User> {
 		} catch (error) {
 			Log.error('Cannot dm user: ' + member.displayName);
 		}
+	}
+
+	getAvatar() {
+		return this.avatar ?? DiscordJsManager.client().user.avatarURL({format : "png"});
 	}
 
 }

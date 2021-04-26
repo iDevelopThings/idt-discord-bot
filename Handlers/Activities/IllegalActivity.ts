@@ -1,10 +1,11 @@
 import {Log} from "@envuso/common";
 import {Duration} from "dayjs/plugin/duration";
-import {ActivityName} from "../../Models/User/Activities";
+import {MessageEmbed} from "discord.js";
+import {ActivityName, IActivities} from "../../Models/User/Activities";
 import {SkillName, SkillRequirements} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
-import {guild} from "../../Util/Bot";
-import {timeRemaining} from "../../Util/Date";
+import {getChannel, guild} from "../../Util/Bot";
+import {dayjs, timeRemaining} from "../../Util/Date";
 import {formatMoney, Numbro, percentOf, title} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
@@ -29,6 +30,12 @@ export interface SuccessfulResponse {
 }
 
 export default abstract class IllegalActivity {
+
+	private activityInformation: IActivities;
+
+	constructor(activityInformation: IActivities) {
+		this.activityInformation = activityInformation;
+	}
 
 	abstract title(): string;
 
@@ -112,16 +119,28 @@ export default abstract class IllegalActivity {
 			const dm             = await member.createDM();
 			const additionalInfo = await event.additionalHandling(randomAmt);
 
-			await Promise.all([
-				dm.send(`It all went down with at the ${title(this.name())}... \n${event.message}\n${additionalInfo}`),
-				user.balanceManager()
-					.deductFromBalance(randomAmt, `${title(this.name)} random event - ${event.name}`)
-					.executeQueued()
-			]);
+
+			await user.balanceManager()
+				.deductFromBalance(randomAmt, `${this.title} random event - ${event.name}`)
+				.executeQueued();
+
+			getChannel('activities').send(
+				new MessageEmbed()
+					.setAuthor(user.displayName, user.getAvatar())
+					.setTitle(this.title())
+					.setDescription(`${user.toString()} It all went down during ${this.title()}... \n${event.message}\n${additionalInfo}`)
+					.addField('Cost: ', formatMoney(randomAmt), true)
+					.setColor("DARK_RED")
+			);
+
 		} catch (error) {
 			Log.error(error.toString());
 			console.trace(error);
 		}
+	}
+
+	hasEnded() {
+		return dayjs(this.activityInformation.endsAt).isBefore(new Date());
 	}
 
 	/**
@@ -149,7 +168,15 @@ export default abstract class IllegalActivity {
 		user.activityManager().removeActivity(this.name());
 		await user.executeQueued();
 
+		getChannel('activities').send(
+			new MessageEmbed()
+				.setAuthor(user.displayName, user.getAvatar())
+				.setTitle(this.title())
+				.setDescription(`${user.toString()} ${response.message}`)
+				.addField('Gains: ', formatMoney(response.moneyGained))
+				.setColor("GREEN")
+		);
 		// We don't need to await this and hold up other processing.
-		user.sendDm(response.message);
+		//		user.sendDm(response.message);
 	}
 }

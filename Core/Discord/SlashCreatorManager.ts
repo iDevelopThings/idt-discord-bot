@@ -29,7 +29,7 @@ export default class SlashCreatorManager {
 		this._creator.on('warn', (message) => Log.warn(message));
 		this._creator.on('error', (error) => Log.error(error, error));
 		this._creator.on('synced', () => Log.info('Commands synced!'));
-		this._creator.on('commandRun', (command, _, ctx) => Log.info(`${ctx.user.username}#${ctx.user.discriminator} (${ctx.user.id}) ran command ${command.commandName}`));
+//		this._creator.on('commandRun', (command, _, ctx) => Log.info(`${ctx.user.username}#${ctx.user.discriminator} (${ctx.user.id}) ran command ${command.commandName}`));
 		this._creator.on('commandRegister', (command) => Log.info(`Registered command ${command.commandName}`));
 		this._creator.on('commandError', (command, error) => {
 			Log.error(`Command ${command.commandName}`);

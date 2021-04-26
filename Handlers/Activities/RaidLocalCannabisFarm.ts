@@ -7,8 +7,9 @@ import {getRandomInt} from "../../Util/Random";
 import IllegalActivity, {RandomEventNames, RandomEvents, SuccessfulResponse} from "./IllegalActivity";
 
 export default class RaidLocalCannabisFarm extends IllegalActivity {
+
 	public title(): string {
-		return 'Local Cannabis Raid';
+		return 'Local Cannabis Farm Raid';
 	}
 
 	public name(): ActivityName {

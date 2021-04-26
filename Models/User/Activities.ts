@@ -45,7 +45,7 @@ export default class Activities {
 	public handlerForActivity(name: ActivityName) {
 		switch (name) {
 			case 'raid_local_cannabis':
-				return new RaidLocalCannabisFarm();
+				return new RaidLocalCannabisFarm(this.get(name));
 			default:
 				return undefined;
 		}

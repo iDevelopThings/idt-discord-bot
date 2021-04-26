@@ -1,4 +1,5 @@
-//import {Log} from "@envuso/common";
+import {Log} from "@envuso/common";
+import {FilterQuery} from "mongodb";
 import CronJob from "../Handlers/CronJob/CronJob";
 import {ActivityName} from "../Models/User/Activities";
 import User from "../Models/User/User";
@@ -18,13 +19,19 @@ export default class ActivityEnded extends CronJob {
 				const handler = user.activityManager().handlerForActivity(activity.value as ActivityName);
 				const event   = handler.randomEventHit();
 
-				if (!event?.name) {
+				if (handler.hasEnded()) {
 					await handler.handleCompletion(user);
+
+					Log.info(`Completed activity "${handler.name()}" for ${user.displayName}`);
 
 					continue;
 				}
 
-//				Log.info(`Random event "${event.name}" for ${user.displayName}`);
+				if (!event?.name) {
+					continue;
+				}
+
+				Log.info(`Random event "${event.name}" for ${user.displayName}`);
 
 				await handler.handleRandomEvent(user, event);
 			}
@@ -32,11 +39,11 @@ export default class ActivityEnded extends CronJob {
 	}
 
 	private buildFilter() {
-		const filter = {};
+		const filter: FilterQuery<User | { _id: any }> = {};
 
 		for (const activity of illegalActivityChoices) {
-			filter[`activities.${activity.value}.endsAt`] = {
-				$gt : new Date(),
+			filter[`activities.${activity.value}`] = {
+				$exists : 'endsAt',
 			};
 		}
 
