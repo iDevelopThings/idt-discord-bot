@@ -108,7 +108,7 @@ export default abstract class IllegalActivity {
 	public async handleRandomEvent(user: User, event: RandomEventInformation) {
 		try {
 			const member         = await guild().member(user.id);
-			const randomAmt      = percentOf(this.startingCost().multiply(2).value().toString(), getRandomInt(10, 30).toString());
+			const randomAmt      = percentOf(this.startingCost().multiply(2).value().toString(), getRandomInt(10, 30).toString() + '%');
 			const dm             = await member.createDM();
 			const additionalInfo = await event.additionalHandling(randomAmt);
 
