@@ -121,7 +121,7 @@ export default abstract class IllegalActivity {
 
 
 			await user.balanceManager()
-				.deductFromBalance(randomAmt, `${this.title} random event - ${event.name}`)
+				.deductFromBalance(randomAmt, `${this.title()} random event - ${event.name}`)
 				.executeQueued();
 
 			getChannel('activities').send(
