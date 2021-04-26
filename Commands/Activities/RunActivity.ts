@@ -2,6 +2,7 @@ import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext, {MessageOptions} from "slash-create/lib/context";
 import Activity, {ActivityType} from "../../Handlers/Activities/Activity";
+import {activityList} from "../../Handlers/Activities/ActivityList";
 import {ActivityName} from "../../Models/User/Activities";
 import User from "../../Models/User/User";
 import {getChannelById, guildId, isOneOfChannels} from "../../Util/Bot";
@@ -123,7 +124,7 @@ export default class RunActivity extends SlashCommand {
 		const options = ctx.options.list as unknown as IListOptions;
 		const embeds  = [];
 
-		for (const activity of Activity.activities()) {
+		for (const activity of activityList) {
 			if (activity.class.type !== options.type) {
 				continue;
 			}

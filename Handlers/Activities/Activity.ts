@@ -6,10 +6,10 @@ import {SkillRequirements} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
 import {getChannel, guild} from "../../Util/Bot";
 import {dayjs, timeRemaining} from "../../Util/Date";
-import {formatMoney, Numbro, percentOf, title} from "../../Util/Formatter";
+import {formatMoney, Numbro, percentOf} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
-import RaidLocalCannabisFarm from "./Illegal/RaidLocalCannabisFarm";
+import {activityList} from "./ActivityList";
 
 export interface CompletionChances {
 	regular: { min: number; max: number };
@@ -25,7 +25,8 @@ export type RandomEventInformation = {
 }
 
 export enum RandomEventNames {
-	COPS = "Cops"
+	COPS            = "Cops",
+	GRANDMA_SLIPPED = "Grandma Slipped"
 }
 
 export enum ActivityType {
@@ -58,24 +59,10 @@ export default abstract class Activity {
 		this.activityInformation = activityInformation;
 	}
 
-	static activities(): ActivitiesListItem[] {
-		return [
-			{
-				name          : 'Raid local cannabis farm',
-				value         : 'raid_local_cannabis',
-				class         : RaidLocalCannabisFarm,
-				color         : 'GREEN',
-				classInstance : (user: User) => new RaidLocalCannabisFarm(
-					user.activityManager().get('raid_local_cannabis')
-				)
-			}
-		];
-	}
-
 	static activitiesForCommandChoices(type?: ActivityType) {
-		let activities = this.activities();
+		let activities = activityList;
 
-		if (!!type) {
+		if (type !== undefined) {
 			activities = activities.filter(activity => activity.class.type === type);
 		}
 
@@ -177,7 +164,7 @@ export default abstract class Activity {
 					.setTitle(this.title())
 					.setDescription(`${user.toString()} It all went down during ${this.title()}... \n${event.message}\n${additionalInfo}`)
 					.addField('Cost: ', formatMoney(randomAmt), true)
-					.setColor("DARK_RED")
+					.setColor('DARK_RED')
 			);
 
 		} catch (error) {
@@ -221,7 +208,7 @@ export default abstract class Activity {
 				.setTitle(this.title())
 				.setDescription(`${user.toString()} ${response.message}`)
 				.addField('Gains: ', formatMoney(response.moneyGained))
-				.setColor("GREEN")
+				.setColor('GREEN')
 		);
 		// We don't need to await this and hold up other processing.
 		//		user.sendDm(response.message);

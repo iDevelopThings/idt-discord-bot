@@ -15,8 +15,8 @@ export default class ActivityEnded extends CronJob {
 		const users = await User.get<User>(this.buildFilter());
 
 		for (const user of users) {
-			for (const activity of Activity.activitiesForCommandChoices()) {
-				const handler = user.activityManager().handlerForActivity(activity.value as ActivityName);
+			for (const activity in user.activities) {
+				const handler = user.activityManager().handlerForActivity(activity as ActivityName);
 				const event   = handler.randomEventHit();
 
 				if (handler.hasEnded()) {
@@ -39,12 +39,14 @@ export default class ActivityEnded extends CronJob {
 	}
 
 	private buildFilter() {
-		const filter: FilterQuery<User | { _id: any }> = {};
+		const filter: FilterQuery<User> = {$or : []};
 
 		for (const activity of Activity.activitiesForCommandChoices()) {
-			filter[`activities.${activity.value}`] = {
-				$exists : 'endsAt',
-			};
+			filter.$or.push({
+				[`activities.${activity.value}`] : {
+					$exists : 'endsAt',
+				}
+			});
 		}
 
 		return filter;
