@@ -128,7 +128,7 @@ export class Gambling extends GamblingInstance {
 		if (amount < minimumBet) {
 			return {
 				joined  : false,
-				message : `You need to place a bet of at least ${minimumBet}.`,
+				message : `You need to place a bet of at least ${formatMoney(minimumBet)}.`,
 			};
 		}
 
