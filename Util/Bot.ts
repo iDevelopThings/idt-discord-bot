@@ -23,6 +23,20 @@ export const getChannelById = (id: string) => {
 	) as TextChannel;
 };
 
+/**
+ * So we can check if the ctx.channelID === 'gambling' or 'activities' for ex
+ *
+ * @param {string} channelId
+ * @param {string} name
+ * @returns {TextChannel}
+ */
+export const isOneOfChannels = (channelId: string, ...name: string[]) => {
+	name = name.map(n => n.toLowerCase());
+
+	return DiscordJsManager.client().channels.cache.some(
+		(c: TextChannel) => c.isText() && name.includes(c.name.toLowerCase()) && c.id === channelId
+	);
+};
 
 export const findInManager = <T>(
 	cache: (keyof Guild),
