@@ -2,14 +2,14 @@ import {Log} from "@envuso/common";
 import {Duration} from "dayjs/plugin/duration";
 import {ColorResolvable, MessageEmbed} from "discord.js";
 import {ActivityName, IActivities} from "../../Models/User/Activities";
-import {SkillName, SkillRequirements} from "../../Models/User/Skills";
+import {SkillRequirements} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
 import {getChannel, guild} from "../../Util/Bot";
 import {dayjs, timeRemaining} from "../../Util/Date";
-import {formatMoney, Numbro, percentOf, title} from "../../Util/Formatter";
+import {formatMoney, Numbro, percentOf} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {getRandomInt} from "../../Util/Random";
-import RaidLocalCannabisFarm from "./RaidLocalCannabisFarm";
+import {activityList} from "./ActivityList";
 
 export interface CompletionChances {
 	regular: { min: number; max: number };
@@ -25,7 +25,14 @@ export type RandomEventInformation = {
 }
 
 export enum RandomEventNames {
-	COPS = "Cops"
+	COPS            = "Cops",
+	GRANDMA_SLIPPED = "Grandma Slipped"
+}
+
+export enum ActivityType {
+	LEGAL,
+	ILLEGAL,
+	HEIST
 }
 
 export type RandomEvents = RandomEventInformation[];
@@ -38,12 +45,13 @@ export interface SuccessfulResponse {
 interface ActivitiesListItem {
 	name: string;
 	value: string;
-	class: typeof IllegalActivity;
-	classInstance: (user: User) => IllegalActivity;
+	class: typeof Activity;
+	classInstance: (user: User) => Activity;
 	color: ColorResolvable;
 }
 
-export default abstract class IllegalActivity {
+export default abstract class Activity {
+	public static type: ActivityType = ActivityType.LEGAL;
 
 	private activityInformation: IActivities;
 
@@ -51,22 +59,14 @@ export default abstract class IllegalActivity {
 		this.activityInformation = activityInformation;
 	}
 
-	static activities(): ActivitiesListItem[] {
-		return [
-			{
-				name          : 'Raid local cannabis farm',
-				value         : 'raid_local_cannabis',
-				class         : RaidLocalCannabisFarm,
-				color         : "GREEN",
-				classInstance : (user: User) => new RaidLocalCannabisFarm(
-					user.activityManager().get('raid_local_cannabis')
-				)
-			}
-		];
-	}
+	static activitiesForCommandChoices(type?: ActivityType) {
+		let activities = activityList;
 
-	static activitiesForCommandChoices() {
-		return this.activities().map(({name, value}) => ({name, value}));
+		if (type !== undefined) {
+			activities = activities.filter(activity => activity.class.type === type);
+		}
+
+		return activities.map(({name, value}) => ({name, value}));
 	}
 
 	abstract title(): string;
@@ -87,7 +87,7 @@ export default abstract class IllegalActivity {
 		if (manager.hasActivity(this.name()) && !manager.hasEnded(this.name())) {
 			return {
 				isAble : false,
-				reason : `${title(this.name())} is still in progress... it will finish in ${timeRemaining(manager.get(this.name()).endsAt)}`
+				reason : `${this.title()} is still in progress... it will finish in ${timeRemaining(manager.get(this.name()).endsAt)}`
 			};
 		}
 
@@ -105,7 +105,7 @@ export default abstract class IllegalActivity {
 		if (!user.balanceManager().hasBalance(this.startingCost().value())) {
 			return {
 				isAble : false,
-				reason : `${title(this.name())} will cost ${formatMoney(this.startingCost())} to purchase the required assets... you cannot afford this right now.`
+				reason : `${this.title()} will cost ${formatMoney(this.startingCost())} to purchase the required assets... you cannot afford this right now.`
 			};
 		}
 
@@ -123,7 +123,7 @@ export default abstract class IllegalActivity {
 			.balanceManager()
 			.deductFromBalance(
 				this.startingCost().value(),
-				`Started activity - ${title(this.name())}`
+				`Started activity - ${this.title()}`
 			)
 			.executeQueued();
 	}
@@ -164,7 +164,7 @@ export default abstract class IllegalActivity {
 					.setTitle(this.title())
 					.setDescription(`${user.toString()} It all went down during ${this.title()}... \n${event.message}\n${additionalInfo}`)
 					.addField('Cost: ', formatMoney(randomAmt), true)
-					.setColor("DARK_RED")
+					.setColor('DARK_RED')
 			);
 
 		} catch (error) {
@@ -197,7 +197,7 @@ export default abstract class IllegalActivity {
 
 		user.balanceManager().addToBalance(
 			NumberInput.someFuckingValueToString(response.moneyGained),
-			`Successfully completed ${title(this.name())}`
+			`Successfully completed ${this.title()}`
 		);
 		user.activityManager().removeActivity(this.name());
 		await user.executeQueued();
@@ -208,7 +208,7 @@ export default abstract class IllegalActivity {
 				.setTitle(this.title())
 				.setDescription(`${user.toString()} ${response.message}`)
 				.addField('Gains: ', formatMoney(response.moneyGained))
-				.setColor("GREEN")
+				.setColor('GREEN')
 		);
 		// We don't need to await this and hold up other processing.
 		//		user.sendDm(response.message);

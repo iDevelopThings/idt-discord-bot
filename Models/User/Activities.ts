@@ -1,9 +1,9 @@
-import IllegalActivity from "../../Handlers/Activities/IllegalActivity";
-import RaidLocalCannabisFarm from "../../Handlers/Activities/RaidLocalCannabisFarm";
+import Activity from "../../Handlers/Activities/Activity";
+import {activityList} from "../../Handlers/Activities/ActivityList";
 import {dayjs} from "../../Util/Date";
 import User from "./User";
 
-export type ActivityName = "raid_local_cannabis";
+export type ActivityName = 'raid_local_cannabis' | 'grandma_groceries';
 
 export interface IActivities {
 	name: ActivityName;
@@ -30,14 +30,14 @@ export default class Activities {
 		return dayjs().isAfter(this.get(name).endsAt);
 	}
 
-	timeRemaining(name : ActivityName){
-		if(!this.hasActivity(name))
+	timeRemaining(name: ActivityName) {
+		if (!this.hasActivity(name))
 			return null;
 
 		return dayjs(this.get(name).endsAt).fromNow(true);
 	}
 
-	public setStarted(name: ActivityName, activityHandler: IllegalActivity) {
+	public setStarted(name: ActivityName, activityHandler: Activity) {
 		this.user.queuedBuilder()
 			.set({
 				[`activities.${name}`] : {
@@ -50,12 +50,13 @@ export default class Activities {
 	}
 
 	public handlerForActivity(name: ActivityName) {
-		switch (name) {
-			case 'raid_local_cannabis':
-				return new RaidLocalCannabisFarm(this.get(name));
-			default:
-				return undefined;
+		for (const activity of activityList) {
+			if (activity.value === name) {
+				return activity.classInstance(this.user);
+			}
 		}
+
+		return undefined;
 	}
 
 	public removeActivity(activity: ActivityName) {

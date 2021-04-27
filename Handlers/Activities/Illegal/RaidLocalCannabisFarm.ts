@@ -1,13 +1,13 @@
 import {Duration} from "dayjs/plugin/duration";
-import {ActivityName} from "../../Models/User/Activities";
-import {SkillRequirements} from "../../Models/User/Skills";
-import {createDuration} from "../../Util/Date";
-import {formatMoney, Numbro, numbro} from "../../Util/Formatter";
-import {getRandomInt} from "../../Util/Random";
-import IllegalActivity, {CompletionChances, RandomEventNames, RandomEvents, SuccessfulResponse} from "./IllegalActivity";
+import {ActivityName} from "../../../Models/User/Activities";
+import {SkillRequirements} from "../../../Models/User/Skills";
+import {createDuration} from "../../../Util/Date";
+import {formatMoney, Numbro, numbro} from "../../../Util/Formatter";
+import {getRandomInt} from "../../../Util/Random";
+import Activity, {ActivityType, CompletionChances, RandomEventNames, RandomEvents, SuccessfulResponse} from "../Activity";
 
-
-export default class RaidLocalCannabisFarm extends IllegalActivity {
+export default class RaidLocalCannabisFarm extends Activity {
+	public static type: ActivityType = ActivityType.ILLEGAL;
 
 	public title(): string {
 		return 'Local Cannabis Farm Raid';
@@ -56,12 +56,13 @@ export default class RaidLocalCannabisFarm extends IllegalActivity {
 	}
 
 	public async getMessageAndBalanceGain(): Promise<SuccessfulResponse> {
-		const chances = this.getCompletionChances();
-
+		const chances          = this.getCompletionChances();
 		let randomPlantsNumber = getRandomInt(chances.regular.min, chances.regular.max);
+
 		if (randomPlantsNumber > chances.lucky.min) {
 			randomPlantsNumber = getRandomInt(chances.lucky.min, chances.lucky.max);
 		}
+
 		const costForPlants = randomPlantsNumber * getRandomInt(chances.money.min, chances.money.max);
 
 		let message = `You just about got away, the owner came for your ass. You stole ${randomPlantsNumber} plants, they're worth a total of ${formatMoney(costForPlants)}`;
@@ -74,7 +75,5 @@ export default class RaidLocalCannabisFarm extends IllegalActivity {
 			message     : message,
 			moneyGained : costForPlants
 		};
-
 	}
-
 }

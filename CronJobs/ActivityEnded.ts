@@ -1,6 +1,6 @@
 import {Log} from "@envuso/common";
 import {FilterQuery} from "mongodb";
-import IllegalActivity from "../Handlers/Activities/IllegalActivity";
+import Activity from "../Handlers/Activities/Activity";
 import CronJob from "../Handlers/CronJob/CronJob";
 import {ActivityName} from "../Models/User/Activities";
 import User from "../Models/User/User";
@@ -15,14 +15,14 @@ export default class ActivityEnded extends CronJob {
 		const users = await User.get<User>(this.buildFilter());
 
 		for (const user of users) {
-			for (const activity of IllegalActivity.activitiesForCommandChoices()) {
-				const handler = user.activityManager().handlerForActivity(activity.value as ActivityName);
+			for (const activity in user.activities) {
+				const handler = user.activityManager().handlerForActivity(activity as ActivityName);
 				const event   = handler.randomEventHit();
 
 				if (handler.hasEnded()) {
 					await handler.handleCompletion(user);
 
-					Log.info(`Completed activity "${handler.name()}" for ${user.displayName}`);
+					Log.info(`Completed activity "${handler.title()}" for ${user.displayName}`);
 
 					continue;
 				}
@@ -39,12 +39,14 @@ export default class ActivityEnded extends CronJob {
 	}
 
 	private buildFilter() {
-		const filter: FilterQuery<User | { _id: any }> = {};
+		const filter: FilterQuery<User> = {$or : []};
 
-		for (const activity of IllegalActivity.activitiesForCommandChoices()) {
-			filter[`activities.${activity.value}`] = {
-				$exists : 'endsAt',
-			};
+		for (const activity of Activity.activitiesForCommandChoices()) {
+			filter.$or.push({
+				[`activities.${activity.value}`] : {
+					$exists : 'endsAt',
+				}
+			});
 		}
 
 		return filter;
