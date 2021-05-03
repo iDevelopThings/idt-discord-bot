@@ -83,9 +83,9 @@ export default class Hack extends SlashCommand {
 
 			if (getRandomInstance().boolean() && user.balanceManager().hasMoney()) {
 				const balanceAvailable = user.balanceManager().hasMoneyType();
-				const stealPercentage = getRandomPercentage(1, getRandomInt(10, 40));
-				const stealAmount     = percentOf(user.balances[balanceAvailable], stealPercentage.toString());
-				const botAmount = numbro(stealAmount).divide(2).value().toString();
+				const stealPercentage  = getRandomPercentage(1, getRandomInt(10, 40));
+				const stealAmount      = percentOf(user.balances[balanceAvailable], stealPercentage.toString());
+				const botAmount        = numbro(stealAmount).divide(2).value().toString();
 
 				user.balanceManager().deductFromBalance(stealAmount, 'Bot reversed hack', balanceAvailable);
 				bot.balanceManager().addToBalance(botAmount, `Reversed hack from ${user.username}`);
@@ -94,6 +94,9 @@ export default class Hack extends SlashCommand {
 
 				return `The bot reversed the hack and stole ${formatMoney(stealAmount)}(${formatPercentage(stealPercentage)}) from your ${balanceAvailable}`;
 			}
+
+
+			await user.executeQueued();
 
 			return 'You failed to get past the bots firewall... try again in an hour.';
 		}
