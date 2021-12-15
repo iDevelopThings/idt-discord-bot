@@ -174,9 +174,16 @@ export default class Dev extends SlashCommand {
 		const users = await User.get<User>();
 
 		for (let user of users) {
+			const currentInfo = user.spamInfo;
+
 			const [xp, calcs] = await getNewSpamInflictedXp(30, user);
 			user.queuedBuilder().set({spamInfo : calcs});
 			await user.executeQueued();
+
+			Log.info(`User: ${user.username}`, {
+				old : currentInfo,
+				new : calcs
+			});
 		}
 	}
 
