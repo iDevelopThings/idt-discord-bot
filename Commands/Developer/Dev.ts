@@ -1,10 +1,13 @@
 import {Log} from "@envuso/common";
 import {TextChannel} from "discord.js";
+import path from "path";
+import readLastLines from 'read-last-lines';
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import SentMessage from "../../Models/SentMessage";
 import User from "../../Models/User/User";
 import {getChannelById, guild, guildId} from "../../Util/Bot";
+import {mdMessage} from "../../Util/Message";
 import NumberInput from "../../Util/NumberInput";
 import {adminPermissionsForCommand, isAdmin} from "../../Util/Role";
 import {getNewSpamInflictedXp, sendSpamLogs} from "../../Util/SpamShit";
@@ -28,6 +31,18 @@ export default class Dev extends SlashCommand {
 					name        : 'updatemessages',
 					description : 'Update messages',
 					type        : CommandOptionType.SUB_COMMAND,
+				},
+				{
+					name        : 'daemonlogs',
+					description : 'Output the last x lines of the daemon logs',
+					type        : CommandOptionType.SUB_COMMAND,
+					options     : [
+						{
+							name        : 'lines',
+							description : 'How many lines to read? defaults to 50',
+							type        : CommandOptionType.INTEGER
+						}
+					]
 				},
 				{
 					name        : 'spamlogs',
@@ -56,6 +71,8 @@ export default class Dev extends SlashCommand {
 				return this.fixTypes(ctx);
 			case 'spamlogs':
 				return this.spamlogs(ctx);
+			case 'daemonlogs':
+				return this.daemonLogs(ctx);
 			case 'updatemessages':
 				return this.updateMessages(ctx);
 		}
@@ -112,6 +129,21 @@ export default class Dev extends SlashCommand {
 
 		return 'Epic fail.';
 
+	}
+
+	private async daemonLogs(ctx: CommandContext) {
+
+		const options = ctx.options as { daemonlogs?: { lines: number } };
+
+		if (!options?.daemonlogs?.lines) {
+			options.daemonlogs.lines = 50;
+		}
+
+		const logPath = path.resolve('/home', 'forge', '.forge', 'daemon-637095.log');
+
+		const lines = await readLastLines.read(logPath, options.daemonlogs.lines, 'utf-8');
+
+		await ctx.send(mdMessage(lines));
 	}
 
 
