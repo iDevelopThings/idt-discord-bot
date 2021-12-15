@@ -17,5 +17,7 @@ export default {
 		}
 	} as MongoConnectionConfiguration,
 
-	cronJobRate : 60 * 1000
+	cronJobRate : 60 * 1000,
+
+	spamMessageHistoryLookBack: 20,
 };

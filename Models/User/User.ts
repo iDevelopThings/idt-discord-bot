@@ -1,10 +1,12 @@
 import {Log} from "@envuso/common";
 import {MessageEmbed} from "discord.js";
 import {ObjectId} from "mongodb";
+import Configuration from "../../Configuration";
 import {id} from "../../Core/Database/ModelDecorators";
 import Model from "../../Core/Database/Mongo/Model";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import {getChannel, guild} from "../../Util/Bot";
+import {dayjs} from "../../Util/Date";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {XpCalculations} from "../../Util/SpamShit";
 import Moderation from "../Moderation/Moderation";
@@ -158,11 +160,34 @@ export default class User extends Model<User> {
 
 	public async getLastMessageTimes() {
 		const messages = await SentMessage
+			.where<SentMessage>({authorId : this.id,})
+			.setOptions({
+				sort  : {
+					authorId  : -1,
+					createdAt : -1,
+				},
+				limit : Configuration.spamMessageHistoryLookBack
+			})
+			.get();
+
+
+		return messages.map(m => m.createdAt);
+	}
+	public async getLastMessageTimesThisMinute() {
+		const messages = await SentMessage
 			.where<SentMessage>({
 				authorId : this.id,
+				createdAt : {
+					$gte : new Date((new Date().getTime() - 60000))
+				}
 			})
-			.orderByDesc('createdAt')
-			.limit(50)
+			.setOptions({
+				sort  : {
+					authorId  : -1,
+					createdAt : -1,
+				},
+				limit : Configuration.spamMessageHistoryLookBack
+			})
 			.get();
 
 

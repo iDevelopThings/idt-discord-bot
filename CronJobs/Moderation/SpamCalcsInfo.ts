@@ -8,7 +8,7 @@ export default class SpamCalcsInfo extends CronJob {
 	public async run() {
 		await super.run();
 
-		await sendSpamLogs();
+//		await sendSpamLogs();
 
 	}
 

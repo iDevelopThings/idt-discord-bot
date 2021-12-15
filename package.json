@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "serve": "ts-node index.ts",
-    "testshit": "ts-node TestingAvgMessageSent.ts",
+    "testshit": "ts-node testing.ts",
     "build": "tsc -b --clean && tsc -b"
   },
   "dependencies": {

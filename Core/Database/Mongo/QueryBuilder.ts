@@ -43,6 +43,8 @@ export class QueryBuilder<T> {
 
 	private _limit: number = null;
 
+	private _options: WithoutProjection<FindOneOptions<T>> = {};
+
 	constructor(model: Model<T>) {
 		this._model = model;
 	}
@@ -208,6 +210,11 @@ export class QueryBuilder<T> {
 		return this;
 	}
 
+	setOptions(options: WithoutProjection<FindOneOptions<T>>) {
+		this._options = options;
+		return this;
+	}
+
 	/**
 	 * When a filter has been specified with where(). It will apply to
 	 * {@see _collectionFilter} then when we make other calls, like
@@ -217,7 +224,7 @@ export class QueryBuilder<T> {
 	 * @private
 	 */
 	private resolveFilter() {
-		const options = {} as WithoutProjection<FindOneOptions<T>>;
+		const options = this._options;
 
 		if (this._collectionOrder && this._collectionOrder?.direction) {
 			options.sort                            = {};
@@ -426,5 +433,6 @@ export class QueryBuilder<T> {
 		this._collectionAggregation = [];
 		this._collectionOrder       = null;
 		this._limit                 = null;
+		this._options               = {};
 	}
 }

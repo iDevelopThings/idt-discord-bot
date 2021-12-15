@@ -3,7 +3,7 @@ import {ClientEvents, Message, TextChannel} from "discord.js";
 import SentMessage from "../Models/SentMessage";
 import User from "../Models/User/User";
 import {StatisticsKeys} from "../Models/User/UserInformationInterfaces";
-import {getNewSpamInflictedXp} from "../Util/SpamShit";
+import {getNewSpamInflictedXp, shouldReduceXp} from "../Util/SpamShit";
 import BaseEventHandler, {ClientEventsTypes} from "./BaseEventHandler";
 
 const ClientEvent = ClientEventsTypes.GUILD_MESSAGE_SENT;
@@ -22,7 +22,8 @@ export default class GuildMessageSent extends BaseEventHandler<ClientEventType> 
 			return;
 		}
 
-		const [xp, calcs] = await getNewSpamInflictedXp(30, user);
+		const xp           = await shouldReduceXp(user) ? 1 : 30;
+		const [xpp, calcs] = await getNewSpamInflictedXp(30, user);
 
 		user.updateStatistic(StatisticsKeys.ACTIVITY_MESSAGES_SENT);
 		user.skillManager().addXp("chatting", xp);

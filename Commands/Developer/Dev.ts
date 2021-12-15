@@ -177,6 +177,11 @@ export default class Dev extends SlashCommand {
 			const currentInfo = user.spamInfo;
 
 			const [xp, calcs] = await getNewSpamInflictedXp(30, user);
+
+			if (calcs === null && currentInfo === null) {
+				continue;
+			}
+
 			user.queuedBuilder().set({spamInfo : calcs});
 			await user.executeQueued();
 
