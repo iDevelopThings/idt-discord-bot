@@ -12,7 +12,7 @@ export function getSpamResult(dates: Date[]): { spamCounter: number, avg: number
 		const curr = dates[i].getTime();
 		const next = (dates[i + 1] || new Date()).getTime();
 
-		if ((next - curr) <= (1000 * 20)) {
+		if ((next - curr) <= (1000 * 80)) {
 			spamCounter++;
 		}
 
@@ -53,22 +53,26 @@ export function getMessageBasedXpRate(dates: Date[]): MessageBasedXpRateResult {
 		return {is : false, rate : 0, calcs : null};
 	}
 
-	const results = getSpamResult(dates);
+	const results         = getSpamResult(dates);
+	const lotsOfMessaging = results.duration.asSeconds() <= 40;
+	const fastMessaging   = (results.spamCounter >= 25);
+	const isSpam          = (fastMessaging || lotsOfMessaging);
+
+	const xpReducer = isSpam
+		? results.duration.asSeconds()
+		: _.min([1000, results.duration.asHours()]);
 
 	const calcs: XpCalculations = {
-		counter         : results.spamCounter,
-		lotsOfMessaging : results.duration.asSeconds() <= 40,
-		fastMessaging   : (results.spamCounter >= (dates.length / 2.5)),
-		xpReducer       : results.duration.asSeconds(),
-		durationAs      : {
+		lotsOfMessaging, fastMessaging, xpReducer,
+		counter    : results.spamCounter,
+		durationAs : {
 			s : results.duration.asSeconds(),
 			h : results.duration.asHours(),
 		}
 	};
 
-	const {fastMessaging, lotsOfMessaging, xpReducer} = calcs;
+	const {xpReducer} = calcs;
 
-	const isSpam = (fastMessaging || lotsOfMessaging);
 
 	calcs.is = isSpam;
 
@@ -81,7 +85,7 @@ export function getMessageBasedXpRate(dates: Date[]): MessageBasedXpRateResult {
 	// If it's not spammy, we'll reward the user
 	// So we'll take the base, for x 30, and add
 	// the avg message time in hours to the base
-	return {is : false, rate : results.duration.asHours(), calcs};
+	return {is : false, rate : xpReducer, calcs};
 }
 
 function finalXpValueFromCalc(baseXp: number, newXp: number): number {
@@ -123,5 +127,5 @@ export async function sendSpamLogs(channel: string = 'mod-logs', users: User[] =
 		getChannel(channel).send({embed : user.spamCalcsEmbed()});
 	}
 
-	return true
+	return true;
 }
