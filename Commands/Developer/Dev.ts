@@ -1,5 +1,5 @@
 import {Log} from "@envuso/common";
-import {TextChannel} from "discord.js";
+import {TextChannel, Util} from "discord.js";
 import path from "path";
 import readLastLines from 'read-last-lines';
 import {CommandOptionType, SlashCommand} from "slash-create";
@@ -139,11 +139,24 @@ export default class Dev extends SlashCommand {
 			options.daemonlogs.lines = 50;
 		}
 
+		if (options.daemonlogs.lines >= 100) {
+			options.daemonlogs.lines = 100;
+		}
+		await ctx.send('Getting them now ☑️');
+
 		const logPath = path.resolve('/home', 'forge', '.forge', 'daemon-637095.log');
 
-		const lines = await readLastLines.read(logPath, options.daemonlogs.lines, 'utf-8');
+		const logsData = await readLastLines.read(logPath, options.daemonlogs.lines, 'utf-8');
 
-		await ctx.send(mdMessage(lines));
+		const logChunks = Util.splitMessage(logsData, {
+			char      : ' ',
+			maxLength : 1500,
+		});
+
+		for (let log of logChunks) {
+			getChannelById(ctx.channelID).send(mdMessage(log));
+		}
+
 	}
 
 
