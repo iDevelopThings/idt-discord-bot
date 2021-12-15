@@ -1,11 +1,14 @@
 import {Log} from "@envuso/common";
+import {MessageEmbed} from "discord.js";
 import {ObjectId} from "mongodb";
 import {id} from "../../Core/Database/ModelDecorators";
 import Model from "../../Core/Database/Mongo/Model";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
-import {guild} from "../../Util/Bot";
+import {getChannel, guild} from "../../Util/Bot";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
+import {XpCalculations} from "../../Util/SpamShit";
 import Moderation from "../Moderation/Moderation";
+import SentMessage from "../SentMessage";
 import Activities, {IActivities} from "./Activities";
 import Balance from "./Balance";
 import Cooldown, {ITimeStates} from "./Cooldown";
@@ -34,6 +37,15 @@ export default class User extends Model<User> {
 	public skills: ISkills;
 	public createdAt: Date;
 	public updatedAt: Date;
+
+	public spamInfo: XpCalculations = {
+		is              : false,
+		counter         : 0,
+		fastMessaging   : false,
+		lotsOfMessaging : false,
+		xpReducer       : 0,
+		durationAs      : {s : 0, h : 0,}
+	};
 
 	_balanceManager: Balance       = new Balance(this);
 	_skillsManager: Skills         = new Skills(this);
@@ -144,5 +156,31 @@ export default class User extends Model<User> {
 		return this.avatar ?? DiscordJsManager.client().user.avatarURL({format : "png"});
 	}
 
+	public async getLastMessageTimes() {
+		const messages = await SentMessage
+			.where<SentMessage>({
+				authorId : this.id,
+			})
+			.orderByAsc('createdAt')
+			.limit(10)
+			.get();
+
+
+		return messages.map(m => m.createdAt);
+	}
+
+	public spamCalcsEmbed() {
+		const info = this.spamInfo;
+
+		return new MessageEmbed()
+			.setAuthor(this.username, this.getAvatar())
+			.addField('Has spam reduction?', info.is, true)
+			.addField('Xp reduction: ', info.xpReducer, true)
+			.addField('Spam counter: ', info.counter, true)
+			.addField('Is fast messaging: ', info.fastMessaging, true)
+			.addField('Is lots of messaging: ', info.lotsOfMessaging, true)
+			.addField('Duration in seconds:', info.durationAs.s, true)
+			.addField('Duration in hours:', info.durationAs.h, true);
+	}
 }
 

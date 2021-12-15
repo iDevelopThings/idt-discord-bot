@@ -1,6 +1,9 @@
-import {ClientEvents, Message} from "discord.js";
+import {Log} from "@envuso/common";
+import {ClientEvents, Message, TextChannel} from "discord.js";
+import SentMessage from "../Models/SentMessage";
 import User from "../Models/User/User";
 import {StatisticsKeys} from "../Models/User/UserInformationInterfaces";
+import {getNewSpamInflictedXp} from "../Util/SpamShit";
 import BaseEventHandler, {ClientEventsTypes} from "./BaseEventHandler";
 
 const ClientEvent = ClientEventsTypes.GUILD_MESSAGE_SENT;
@@ -10,7 +13,7 @@ type ClientEventsType = ClientEvents[ClientEventType];
 export default class GuildMessageSent extends BaseEventHandler<ClientEventType> {
 
 	async handle(message: Message) {
-		if(message.author.bot) {
+		if (message.author.bot) {
 			return;
 		}
 
@@ -19,10 +22,14 @@ export default class GuildMessageSent extends BaseEventHandler<ClientEventType> 
 			return;
 		}
 
+		const [xp, calcs] = await getNewSpamInflictedXp(30, user);
+
 		user.updateStatistic(StatisticsKeys.ACTIVITY_MESSAGES_SENT);
-		user.skillManager().addXp("chatting", 30);
+		user.skillManager().addXp("chatting", xp);
+		user.queuedBuilder().set({spamInfo : calcs});
 		await user.executeQueued();
 
+		SentMessage.storeInfo(message).catch(error => Log.error(error));
 	}
 
 	getEventName(): ClientEventType {

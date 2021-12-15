@@ -4,6 +4,7 @@ import CommandContext from "slash-create/lib/context";
 import User from "../../Models/User/User";
 import {guild, guildId} from "../../Util/Bot";
 import {formatMoney} from "../../Util/Formatter";
+import {getNewSpamInflictedXp} from "../../Util/SpamShit";
 
 export default class Statistics extends SlashCommand {
 
@@ -31,12 +32,14 @@ export default class Statistics extends SlashCommand {
 		const member = guild().members.cache.get(userId);
 
 		const formatNumber = (val: number) => {
-			if(isNaN(val)) {
+			if (isNaN(val)) {
 				return 0;
 			}
 
 			return val;
-		}
+		};
+
+		const [messageXpRate] = await getNewSpamInflictedXp(30, user);
 
 		return {
 			embeds : [
@@ -47,8 +50,12 @@ export default class Statistics extends SlashCommand {
 					.addField('Most invested', formatMoney(user.statistics.balance.mostInvested), true)
 					.addField('Most lost to taxes', formatMoney(user.statistics.balance.mostLostToTaxes), true)
 					.addField('Times gambled', formatNumber(user.statistics.gambling.totals.count), true)
-					.addField('Biggest win/loss amount', formatMoney(user.statistics.gambling.totals.mostMoney), true)
-					.addField('Messages sent', formatNumber(user.statistics.activity.messagesSent), true),
+					.addField('Biggest win/loss amount', formatMoney(user.statistics.gambling.totals.mostMoney), true),
+				new MessageEmbed()
+					.setColor("BLURPLE")
+					.setTitle('Messaging')
+					.addField('Messages Sent', formatNumber(user.statistics.activity.messagesSent), false)
+					.addField('Message Xp Rate', `${formatNumber(messageXpRate)}/message`, false),
 				new MessageEmbed()
 					.setColor("GREEN")
 					.setTitle('Gambling Wins')

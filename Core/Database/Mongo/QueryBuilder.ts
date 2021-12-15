@@ -41,6 +41,8 @@ export class QueryBuilder<T> {
 
 	private _collectionOrder: CollectionOrder | null = null;
 
+	private _limit: number = null;
+
 	constructor(model: Model<T>) {
 		this._model = model;
 	}
@@ -222,6 +224,10 @@ export class QueryBuilder<T> {
 			options.sort[this._collectionOrder.key] = this._collectionOrder.direction;
 		}
 
+		if (this._limit !== null) {
+			options.limit = this._limit;
+		}
+
 		if (this._collectionAggregation?.length) {
 			const aggregation = [
 				{$match : this._collectionFilter},
@@ -240,6 +246,12 @@ export class QueryBuilder<T> {
 			.find(this._collectionFilter, options);
 
 		return this._builderResult;
+	}
+
+	limit(limit: number) {
+		this._limit = limit;
+
+		return this;
 	}
 
 	/**
@@ -413,5 +425,6 @@ export class QueryBuilder<T> {
 		this._collectionPush.clear();
 		this._collectionAggregation = [];
 		this._collectionOrder       = null;
+		this._limit                 = null;
 	}
 }

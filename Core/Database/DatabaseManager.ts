@@ -5,6 +5,7 @@ import Configuration from "../../Configuration";
 import CronJobInformation from "../../Models/CronJobInformation";
 import Meme from "../../Models/Meme";
 import ModerationLog from "../../Models/Moderation/ModerationLog";
+import SentMessage from "../../Models/SentMessage";
 import User from "../../Models/User/User";
 
 export default class DatabaseManager {
@@ -23,7 +24,8 @@ export default class DatabaseManager {
 			User,
 			Meme,
 			CronJobInformation,
-			ModerationLog
+			ModerationLog,
+			SentMessage,
 		];
 	}
 

@@ -1,10 +1,13 @@
-import {Decimal128} from "mongodb";
+import {Log} from "@envuso/common";
+import {TextChannel} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
+import SentMessage from "../../Models/SentMessage";
 import User from "../../Models/User/User";
-import {guildId} from "../../Util/Bot";
+import {getChannelById, guild, guildId} from "../../Util/Bot";
 import NumberInput from "../../Util/NumberInput";
 import {adminPermissionsForCommand, isAdmin} from "../../Util/Role";
+import {getNewSpamInflictedXp, sendSpamLogs} from "../../Util/SpamShit";
 
 export default class Dev extends SlashCommand {
 	constructor(creator) {
@@ -21,6 +24,23 @@ export default class Dev extends SlashCommand {
 					description : 'Fix the types of numbers',
 					type        : CommandOptionType.SUB_COMMAND,
 				},
+				{
+					name        : 'updatemessages',
+					description : 'Update messages',
+					type        : CommandOptionType.SUB_COMMAND,
+				},
+				{
+					name        : 'spamlogs',
+					description : 'Output spam logs for a specific user, or all',
+					type        : CommandOptionType.SUB_COMMAND,
+					options     : [
+						{
+							name        : 'user',
+							description : 'Output a users spam log',
+							type        : CommandOptionType.USER,
+						},
+					]
+				},
 			]
 		});
 		this.filePath = __filename;
@@ -34,6 +54,10 @@ export default class Dev extends SlashCommand {
 		switch (ctx.subcommands[0]) {
 			case 'fixtypes':
 				return this.fixTypes(ctx);
+			case 'spamlogs':
+				return this.spamlogs(ctx);
+			case 'updatemessages':
+				return this.updateMessages(ctx);
 		}
 	}
 
@@ -70,6 +94,95 @@ export default class Dev extends SlashCommand {
 		}
 
 	}
+
+	private async spamlogs(ctx: CommandContext) {
+
+		const options = ctx.options as { spamlogs?: { user: string } };
+		const channel = getChannelById(ctx.channelID);
+
+		const users = [];
+
+		if (options.spamlogs?.user) {
+			users.push(await User.getOrCreate(options.spamlogs.user));
+		}
+
+		if (await sendSpamLogs(channel.name, users)) {
+			return 'le boosh';
+		}
+
+		return 'Epic fail.';
+
+	}
+
+
+	private async updateMessages(ctx: CommandContext) {
+
+		for (let channel of guild().channels.cache.values()) {
+			if (!channel.isText()) {
+				continue;
+			}
+
+			const textChannel = (channel as TextChannel);
+			if (!guild().roles.everyone.permissionsIn(textChannel).has('SEND_MESSAGES')) {
+				continue;
+			}
+
+			Log.info('---------');
+			Log.info('Getting messages for channel: ' + textChannel.name);
+
+			let lastId = null;
+			for (let i = 0; i < 3; i++) {
+				Log.info('Messages page ' + i);
+
+				const messages = await textChannel.messages.fetch({
+					limit  : 100,
+					before : lastId ? lastId : undefined,
+				});
+
+				if (i === 0 && !messages.size) {
+					Log.info('No messages in channel ' + channel.name);
+					break;
+				}
+
+				if (!messages || !messages?.size) {
+					Log.info('No more messages for page ' + i);
+					break;
+				}
+
+				const last = messages.last();
+
+				if (last) {
+					lastId = last.id;
+				} else {
+					debugger;
+				}
+
+				let mi = 0;
+				for (let [id, message] of messages) {
+					try {
+						const user = await User.getOrCreate(message.author.id);
+
+						const [xp, calcs] = await getNewSpamInflictedXp(30, user);
+
+						user.queuedBuilder().set({spamInfo : calcs});
+						await user.executeQueued();
+
+						SentMessage.storeInfo(message).catch(error => Log.error(error));
+						mi++;
+
+						Log.info(`Processed message for user: ${user.username} - message ${mi}/${messages.size}`);
+					} catch (error) {
+						Log.error(error);
+					}
+				}
+
+			}
+
+
+		}
+
+	}
+
 }
 
 export interface IBalanceOptions {
