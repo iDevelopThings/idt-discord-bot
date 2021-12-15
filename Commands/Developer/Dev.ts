@@ -33,6 +33,11 @@ export default class Dev extends SlashCommand {
 					type        : CommandOptionType.SUB_COMMAND,
 				},
 				{
+					name        : 'recalcStats',
+					description : 'recalc spam stats',
+					type        : CommandOptionType.SUB_COMMAND,
+				},
+				{
 					name        : 'daemonlogs',
 					description : 'Output the last x lines of the daemon logs',
 					type        : CommandOptionType.SUB_COMMAND,
@@ -73,6 +78,8 @@ export default class Dev extends SlashCommand {
 				return this.spamlogs(ctx);
 			case 'daemonlogs':
 				return this.daemonLogs(ctx);
+			case 'recalcStats':
+				return this.recalcStats(ctx);
 			case 'updatemessages':
 				return this.updateMessages(ctx);
 		}
@@ -163,6 +170,15 @@ export default class Dev extends SlashCommand {
 
 	}
 
+	private async recalcStats(ctx: CommandContext) {
+		const users = await User.get<User>();
+
+		for (let user of users) {
+			const [xp, calcs] = await getNewSpamInflictedXp(30, user);
+			user.queuedBuilder().set({spamInfo : calcs});
+			await user.executeQueued();
+		}
+	}
 
 	private async updateMessages(ctx: CommandContext) {
 

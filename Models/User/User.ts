@@ -161,8 +161,8 @@ export default class User extends Model<User> {
 			.where<SentMessage>({
 				authorId : this.id,
 			})
-			.orderByAsc('createdAt')
-			.limit(10)
+			.orderByDesc('createdAt')
+			.limit(20)
 			.get();
 
 
