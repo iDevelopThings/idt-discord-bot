@@ -71,9 +71,6 @@ export function getMessageBasedXpRate(dates: Date[]): MessageBasedXpRateResult {
 		}
 	};
 
-	const {xpReducer} = calcs;
-
-
 	calcs.is = isSpam;
 
 	// If it's spammy, we'll take the base xp(30 in the case of messages)
