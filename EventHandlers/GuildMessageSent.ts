@@ -10,8 +10,11 @@ type ClientEventsType = ClientEvents[ClientEventType];
 export default class GuildMessageSent extends BaseEventHandler<ClientEventType> {
 
 	async handle(message: Message) {
-		const user = await User.getOrCreate(message.author.id);
+		if(message.author.bot) {
+			return;
+		}
 
+		const user = await User.getOrCreate(message.author.id);
 		if (!user) {
 			return;
 		}

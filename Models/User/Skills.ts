@@ -97,7 +97,7 @@ export default class Skills {
 		const newLevel      = Skills.levelForXp(currentXp + xp);
 		const member        = guild().members.cache.get(this.user.id);
 
-		if (newLevel > originalLevel && this.user.preference('botDmMessages') && !member.user.bot) {
+		if (newLevel > originalLevel && this.user.preference('botDmMessages')) {
 			// Do this in the background... Don't really care
 			this.sendLevelUpMessage(member, skill, newLevel);
 		}
@@ -136,6 +136,10 @@ export default class Skills {
 	}
 
 	private async sendLevelUpMessage(member: GuildMember, skill: SkillName, level: number) {
+		if(member.user.bot) {
+			return;
+		}
+
 		try {
 			await this.user.sendDm(`You have leveled up ${AvailableSkills[skill].title}. You are now level ${level}\n**You can disable these messages with the command /preferences settings**`);
 		} catch (error) {
