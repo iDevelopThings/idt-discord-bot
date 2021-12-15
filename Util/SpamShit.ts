@@ -122,9 +122,11 @@ export async function sendSpamLogs(channel: string = 'mod-logs', users: User[] =
 		return false;
 	}
 
+	const tChannel = getChannel(channel)
+
 	for (let user of users) {
 		const info = user.spamInfo;
-		getChannel(channel).send({embed : user.spamCalcsEmbed()});
+		tChannel.send({embed : user.spamCalcsEmbed()});
 	}
 
 	return true;
