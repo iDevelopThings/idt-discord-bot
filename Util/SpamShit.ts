@@ -57,9 +57,9 @@ export function getMessageBasedXpRate(dates: Date[]): MessageBasedXpRateResult {
 
 	const calcs: XpCalculations = {
 		counter         : results.spamCounter,
-		lotsOfMessaging : results.duration.asMinutes() <= 2,
+		lotsOfMessaging : results.duration.asSeconds() <= 40,
 		fastMessaging   : (results.spamCounter >= (dates.length / 2.5)),
-		xpReducer       : results.duration.asSeconds() / 30,
+		xpReducer       : results.duration.asSeconds(),
 		durationAs      : {
 			s : results.duration.asSeconds(),
 			h : results.duration.asHours(),
