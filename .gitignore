@@ -1,7 +1,7 @@
 /storage
 yarn-error.log
 /dist
-.env
+.env*
 .idea/
 forge.yml
 
