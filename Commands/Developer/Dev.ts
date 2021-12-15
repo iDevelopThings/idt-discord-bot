@@ -133,6 +133,10 @@ export default class Dev extends SlashCommand {
 
 	private async daemonLogs(ctx: CommandContext) {
 
+		if (ctx.user.id !== '172033311592415232') {
+			return 'nah';
+		}
+
 		const options = ctx.options as { daemonlogs?: { lines: number } };
 
 		if (!options?.daemonlogs?.lines) {
