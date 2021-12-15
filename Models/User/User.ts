@@ -162,7 +162,7 @@ export default class User extends Model<User> {
 				authorId : this.id,
 			})
 			.orderByDesc('createdAt')
-			.limit(20)
+			.limit(50)
 			.get();
 
 
