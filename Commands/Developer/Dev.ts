@@ -33,7 +33,7 @@ export default class Dev extends SlashCommand {
 					type        : CommandOptionType.SUB_COMMAND,
 				},
 				{
-					name        : 'recalcStats',
+					name        : 'recalcstats',
 					description : 'recalc spam stats',
 					type        : CommandOptionType.SUB_COMMAND,
 				},
@@ -78,7 +78,7 @@ export default class Dev extends SlashCommand {
 				return this.spamlogs(ctx);
 			case 'daemonlogs':
 				return this.daemonLogs(ctx);
-			case 'recalcStats':
+			case 'recalcstats':
 				return this.recalcStats(ctx);
 			case 'updatemessages':
 				return this.updateMessages(ctx);
