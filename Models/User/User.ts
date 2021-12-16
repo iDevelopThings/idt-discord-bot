@@ -40,6 +40,7 @@ export default class User extends Model<User> {
 	public createdAt: Date;
 	public updatedAt: Date;
 
+	public isBot: boolean           = false;
 	public spamInfo: XpCalculations = {
 		is              : false,
 		counter         : 0,
@@ -173,10 +174,11 @@ export default class User extends Model<User> {
 
 		return messages.map(m => m.createdAt);
 	}
+
 	public async getLastMessageTimesThisMinute() {
 		const messages = await SentMessage
 			.where<SentMessage>({
-				authorId : this.id,
+				authorId  : this.id,
 				createdAt : {
 					$gte : new Date((new Date().getTime() - 60000))
 				}

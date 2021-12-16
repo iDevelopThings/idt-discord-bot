@@ -5,7 +5,7 @@ import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
-import {getChannel, getChannelById, guildId} from "../../Util/Bot";
+import {getChannel, getChannelById, guildId, isOneOfChannels} from "../../Util/Bot";
 import {formatMoney, formatXp} from "../../Util/Formatter";
 
 
@@ -69,10 +69,9 @@ export default class Leaderboard extends SlashCommand {
 
 
 	async run(ctx: CommandContext) {
-		const gambleChannel = getChannel('gambling');
 
-		if (ctx.channelID !== gambleChannel?.id) {
-			return `You can only use /leaderboard commands in the ${gambleChannel.toString()} channel.`;
+		if (!isOneOfChannels(ctx.channelID, 'activities', 'commands', 'gambling')) {
+			return `You can only use /leaderboard commands in the activities, gambling or commands channel.`;
 		}
 
 		const leaderboardType = ctx.subcommands[0];
@@ -117,7 +116,7 @@ export default class Leaderboard extends SlashCommand {
 
 			const leaderboardValue = this.getLeaderboardValueForUser(ctx, user);
 
-			context.font              = '700 22px sans-serif';
+			context.font            = '700 22px sans-serif';
 			const valueMeasurements = context.measureText(leaderboardValue);
 
 			const userCanvas  = createCanvas(measurementsUsername.width + valueMeasurements.width + 10 + 20 + 50, 50);
@@ -171,7 +170,7 @@ export default class Leaderboard extends SlashCommand {
 
 	getLeaderboardUsers(ctx: CommandContext) {
 		return User.getCollection<User>().find({
-			username : {$not : {$eq : 'iDevelopBot'}}
+			isBot : false,
 		}, {
 			collation : {numericOrdering : true, locale : "en_US"},
 			sort      : this.getLeaderboardSort(ctx),

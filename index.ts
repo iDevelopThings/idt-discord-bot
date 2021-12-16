@@ -30,6 +30,7 @@ async function boot() {
 	await SlashCreatorManager.get().sync();
 
 	await cronHandler.boot();
+
 	//	ActivityEndedCron.start();
 
 }
