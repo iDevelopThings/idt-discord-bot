@@ -38,6 +38,11 @@ export default class Dev extends SlashCommand {
 					type        : CommandOptionType.SUB_COMMAND,
 				},
 				{
+					name        : 'cleanbalancehistory',
+					description : 'Clean up users balance history',
+					type        : CommandOptionType.SUB_COMMAND,
+				},
+				{
 					name        : 'daemonlogs',
 					description : 'Output the last x lines of the daemon logs',
 					type        : CommandOptionType.SUB_COMMAND,
