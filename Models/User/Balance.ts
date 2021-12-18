@@ -128,4 +128,18 @@ export default class Balance {
 	}
 
 
+	public async cleanHistory() {
+		if (this.user.balanceHistory.length < 50) {
+			return false;
+		}
+
+		this.user.balanceHistory = this.user.balanceHistory.slice(-50);
+
+		await User.getCollection<User>().updateOne(
+			{_id : this.user._id},
+			{$set : {balanceHistory : this.user.balanceHistory}}
+		);
+
+		return true;
+	}
 }

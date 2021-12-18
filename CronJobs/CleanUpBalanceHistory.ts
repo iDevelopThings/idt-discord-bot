@@ -11,16 +11,7 @@ export default class CleanUpBalanceHistory extends CronJob {
 		const users = await User.get<User>();
 
 		for (const user of users) {
-			if (user.balanceHistory.length < 50) {
-				continue;
-			}
-
-			user.balanceHistory = user.balanceHistory.slice(-50);
-
-			await User.getCollection<User>().updateOne(
-				{_id : user._id},
-				{$set : {balanceHistory : user.balanceHistory}}
-			);
+			await user.balanceManager().cleanHistory();
 		}
 	}
 

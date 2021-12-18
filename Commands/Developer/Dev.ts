@@ -82,6 +82,8 @@ export default class Dev extends SlashCommand {
 				return this.recalcStats(ctx);
 			case 'updatemessages':
 				return this.updateMessages(ctx);
+			case 'cleanbalancehistory':
+				return this.cleanBalanceHistory(ctx);
 		}
 	}
 
@@ -260,6 +262,17 @@ export default class Dev extends SlashCommand {
 
 	}
 
+	private async cleanBalanceHistory(ctx: CommandContext) {
+		await ctx.defer(true);
+
+		const users = await User.get<User>();
+
+		for (const user of users) {
+			await user.balanceManager().cleanHistory();
+		}
+
+		await ctx.send('All done.')
+	}
 }
 
 export interface IBalanceOptions {
