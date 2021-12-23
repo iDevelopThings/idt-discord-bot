@@ -58,6 +58,7 @@ export default class DoubleOrNothing extends SlashCommand {
 						.setDescription(`Your balance is now: ${formatMoney(user.balanceManager().get('balance'))}`)
 				]
 			});
+			return;
 		}
 
 		await ctx.send({
