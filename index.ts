@@ -4,6 +4,9 @@ import {config} from 'dotenv';
 config();
 import './Util/Date';
 import {Log} from "@envuso/common";
+
+import {ItemTransformer} from "./Handlers/Inventory/Item/ItemTransformer";
+
 import DatabaseManager from "./Core/Database/DatabaseManager";
 import DiscordJsManager from "./Core/Discord/DiscordJsManager";
 import {loadDiscordEventHandlers} from "./Core/Discord/EventHandlers";
@@ -19,6 +22,8 @@ SlashCreatorManager.get().boot();
 
 
 async function boot() {
+	await ItemTransformer.loadItemClasses();
+
 	loadDiscordEventHandlers();
 
 	await databaseManager.boot();

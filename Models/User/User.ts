@@ -1,12 +1,16 @@
 import {Log} from "@envuso/common";
+import {Type} from "class-transformer";
 import {MessageEmbed} from "discord.js";
 import {ObjectId} from "mongodb";
 import Configuration from "../../Configuration";
 import {id} from "../../Core/Database/ModelDecorators";
 import Model from "../../Core/Database/Mongo/Model";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
-import {getChannel, guild} from "../../Util/Bot";
-import {dayjs} from "../../Util/Date";
+import {BaseInventoryItem} from "../../Handlers/Inventory/Item/BaseInventoryItem";
+import {itemTypesTransformer} from "../../Handlers/Inventory/Item/ItemTypeTransformerObject";
+import {ItemTypes} from "../../Handlers/Inventory/Item/ItemTypes";
+import UserInventoryManager from "../../Handlers/Inventory/UserInventoryManager";
+import {guild} from "../../Util/Bot";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
 import {XpCalculations} from "../../Util/SpamShit";
 import Moderation from "../Moderation/Moderation";
@@ -14,7 +18,7 @@ import SentMessage from "../SentMessage";
 import Activities, {IActivities} from "./Activities";
 import Balance from "./Balance";
 import Cooldown, {ITimeStates} from "./Cooldown";
-import Skills, {AvailableSkills} from "./Skills";
+import Skills from "./Skills";
 import {IBalanceHistory, IBalances, IPreferences, ISkills, IUserStatistics, StatisticsKeys} from "./UserInformationInterfaces";
 import UserManager from "./UserManager";
 
@@ -36,6 +40,8 @@ export default class User extends Model<User> {
 	public cooldowns: ITimeStates                     = {};
 	public preferences: IPreferences;
 	public activities: { [key: string]: IActivities } = {};
+	@Type(() => BaseInventoryItem, itemTypesTransformer)
+	public inventory: ItemTypes[]                     = [];
 	public skills: ISkills;
 	public createdAt: Date;
 	public updatedAt: Date;
@@ -50,11 +56,12 @@ export default class User extends Model<User> {
 		durationAs      : {s : 0, h : 0,}
 	};
 
-	_balanceManager: Balance       = new Balance(this);
-	_skillsManager: Skills         = new Skills(this);
-	_cooldownManager: Cooldown     = new Cooldown(this);
-	_activitiesManager: Activities = new Activities(this);
-	_moderationManager: Moderation = new Moderation(this);
+	_balanceManager: Balance                = new Balance(this);
+	_skillsManager: Skills                  = new Skills(this);
+	_cooldownManager: Cooldown              = new Cooldown(this);
+	_activitiesManager: Activities          = new Activities(this);
+	_moderationManager: Moderation          = new Moderation(this);
+	_inventoryManager: UserInventoryManager = new UserInventoryManager(this);
 
 	skillManager(): Skills {
 		return this._skillsManager;
@@ -74,6 +81,10 @@ export default class User extends Model<User> {
 
 	moderationManager(): Moderation {
 		return this._moderationManager;
+	}
+
+	inventoryManager(): UserInventoryManager {
+		return this._inventoryManager;
 	}
 
 

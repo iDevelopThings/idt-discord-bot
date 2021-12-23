@@ -20,7 +20,7 @@ export default class NumberInput {
 		return this;
 	}
 
-	parse() {
+	parse(checkBalance: boolean = true) {
 		let value = NumberInput.someFuckingValueToString(this.input);
 
 		// If the number is a %, we'll get x percent of the users balance
@@ -44,16 +44,18 @@ export default class NumberInput {
 			return this;
 		}
 
-		if (!this.user.balanceManager().hasBalance(amountFormatted, this._balanceType)) {
-			if (this._balanceType === 'invested') {
-				this._validationError = InvalidNumberResponse.NOT_ENOUGH_INVESTMENT
-					+ ` You need ${formatMoney(amountFormatted, true)}.`;
-			} else {
-				this._validationError = InvalidNumberResponse.NOT_ENOUGH_BALANCE
-					+ ` You need ${formatMoney(amountFormatted, true)}.`;
-			}
+		if (checkBalance) {
+			if (!this.user.balanceManager().hasBalance(amountFormatted, this._balanceType)) {
+				if (this._balanceType === 'invested') {
+					this._validationError = InvalidNumberResponse.NOT_ENOUGH_INVESTMENT
+						+ ` You need ${formatMoney(amountFormatted, true)}.`;
+				} else {
+					this._validationError = InvalidNumberResponse.NOT_ENOUGH_BALANCE
+						+ ` You need ${formatMoney(amountFormatted, true)}.`;
+				}
 
-			return this;
+				return this;
+			}
 		}
 
 		this._value = amountFormatted;

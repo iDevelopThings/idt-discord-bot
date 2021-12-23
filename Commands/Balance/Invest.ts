@@ -167,7 +167,7 @@ export default class Invest extends SlashCommand {
 
 		const {income} = await user.balanceManager().claimInvestment();
 
-		return `You claimed ${formatMoney(income, true)} from your investments.`;
+		return `You claimed ${formatMoney(income, false, 1000000)} from your investments.`;
 	}
 
 	/**

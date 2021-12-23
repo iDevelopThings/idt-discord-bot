@@ -1,11 +1,12 @@
 import {MessageEmbed} from "discord.js";
 import {SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
+import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
 import {getChannel, guildId} from "../../Util/Bot";
 import {formatMoney, numbro} from "../../Util/Formatter";
 import NumberInput from "../../Util/NumberInput";
-import {getRandomInt} from "../../Util/Random";
+import {getRandomInt, getRandomPercentage} from "../../Util/Random";
 
 export default class DoubleOrNothing extends SlashCommand {
 	constructor(creator) {
@@ -62,6 +63,14 @@ export default class DoubleOrNothing extends SlashCommand {
 			});
 			return;
 		}
+
+
+		const bot = await User.getOrCreate(DiscordJsManager.client().user.id);
+		bot.balanceManager().addToBalance(
+			numbro(NumberInput.someFuckingValueToInt(amount)).multiply(getRandomPercentage(70, 99)).value(),
+			'Taken from losers input during double or nothing.'
+		);
+		await bot.executeQueued();
 
 		await ctx.send({
 			embeds : [

@@ -1,12 +1,13 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
+import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import {DiceRoll} from "../../Handlers/Gambling/DiceRoll/DiceRoll";
 import User from "../../Models/User/User";
 import {getChannel, guildId} from "../../Util/Bot";
 import {formatMoney, numbro} from "../../Util/Formatter";
 import NumberInput from "../../Util/NumberInput";
-import {getRandomInt} from "../../Util/Random";
+import {getRandomInt, getRandomPercentage} from "../../Util/Random";
 
 export default class GambleDiceRoll extends SlashCommand {
 	constructor(creator) {
@@ -19,7 +20,7 @@ export default class GambleDiceRoll extends SlashCommand {
 				{
 					name        : 'amount',
 					description : 'How much money do you want to bet?',
-					type        : CommandOptionType.INTEGER,
+					type        : CommandOptionType.STRING,
 					required    : true,
 				},
 				{
@@ -64,6 +65,10 @@ export default class GambleDiceRoll extends SlashCommand {
 			ctx.options.dies = 1;
 		}
 
+		if (ctx.options.dies >= 50) {
+			return `Cmon bruh, y u do dis.`;
+		}
+
 		const side  = Number(ctx.options.side);
 		const input = new NumberInput(String(ctx.options.amount), user).parse();
 
@@ -86,6 +91,13 @@ export default class GambleDiceRoll extends SlashCommand {
 
 		if (!diceRoll.isWinningSide(side)) {
 			await user.refresh();
+
+			const bot = await User.getOrCreate(DiscordJsManager.client().user.id);
+			bot.balanceManager().addToBalance(
+				numbro(NumberInput.someFuckingValueToInt(input.value())).multiply(getRandomPercentage(70, 99)).value(),
+				'Taken from losers input during dice roll'
+			);
+			await bot.executeQueued();
 
 			await ctx.send({
 				embeds : [

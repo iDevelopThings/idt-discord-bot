@@ -34,7 +34,24 @@ export const numbroParse = (i: string, options?: Format | string) => {
 	return _numbro.unformat(i.toLocaleLowerCase(), options);
 };
 
-export const formatMoney = (i, specific = false) => {
+export const formatNumber = (i, specific = false) => {
+	const value = numbro(i).format({
+		average          : specific === false,
+		mantissa         : 2,
+		optionalMantissa : specific === false,
+	});
+
+	if (value === '$NaN' || value === '-$aN') {
+		return '0';
+	}
+
+	return value;
+};
+export const formatMoney  = (i, specific = false, specificIfLessThan: number = null) => {
+	if (specificIfLessThan && specific) {
+		specific = (numbro(i).value() <= specificIfLessThan);
+	}
+
 	const value = numbro(i).formatCurrency({
 		average          : specific === false,
 		mantissa         : 2,
@@ -45,6 +62,7 @@ export const formatMoney = (i, specific = false) => {
 	if (value === '$NaN' || value === '-$aN') {
 		return '$0';
 	}
+
 
 	return value;
 };

@@ -1,7 +1,5 @@
 import {GuildMember} from "discord.js";
-import {Decimal128} from "mongodb";
 import {guild} from "../../Util/Bot";
-import SentMessage from "../SentMessage";
 import User from "./User";
 import {IDiscordUserInformation, IUserStatistics} from "./UserInformationInterfaces";
 
