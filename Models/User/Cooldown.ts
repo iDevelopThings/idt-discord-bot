@@ -45,7 +45,13 @@ export default class Cooldown {
 			return 0;
 		}
 
+
 		if (humanize) {
+			const diffInSeconds = dayjs(cooldownDate).diff(dayjs(), 'seconds');
+			if (diffInSeconds <= 10) {
+				return `${diffInSeconds} second${diffInSeconds === 1 ? '' : 's'}`;
+			}
+
 			return dayjs(cooldownDate).fromNow(true);
 		}
 
