@@ -49,6 +49,8 @@ export default class DoubleOrNothing extends SlashCommand {
 			user.balanceManager().addToBalance(numbro(amount).multiply(2).value(), 'Double or nothing winnings');
 			await user.executeQueued();
 
+			await user.refresh();
+
 			await ctx.send({
 				embeds : [
 					new MessageEmbed()
