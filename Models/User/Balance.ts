@@ -31,6 +31,10 @@ export default class Balance {
 		return numbro(this.user.balances[balanceType]).value();
 	}
 
+	getFormattedBalance(balanceType: keyof IBalances = 'balance') {
+		return formatMoney(this.get(balanceType));
+	}
+
 	hasBalance(amount: SomeFuckingValue, type: keyof IBalances = 'balance') {
 		amount        = NumberInput.someFuckingValueToString(amount);
 		const balance = NumberInput.someFuckingValueToString(this.user.balances[type]);

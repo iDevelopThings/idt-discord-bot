@@ -1,7 +1,7 @@
 import {Decimal128} from "mongodb";
 import User from "../Models/User/User";
 import {IBalances} from "../Models/User/UserInformationInterfaces";
-import {formatMoney, InvalidNumberResponse, numbro, numbroParse, percentOf} from "./Formatter";
+import {formatMoney, InvalidNumberResponse, Numbro, numbro, numbroParse, percentOf} from "./Formatter";
 
 export type SomeFuckingValue = string | number | Decimal128;
 
@@ -67,6 +67,18 @@ export default class NumberInput {
 
 	error() {
 		return this._validationError;
+	}
+
+	numbroValue(): Numbro {
+		return numbro(this._value);
+	}
+
+	formattedMoneyValue(): string {
+		return formatMoney(this._value);
+	}
+
+	numberValue(): number {
+		return this.numbroValue().value();
 	}
 
 	value(): string {
