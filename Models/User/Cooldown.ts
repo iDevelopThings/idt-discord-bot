@@ -5,6 +5,7 @@ export interface ITimeStates {
 	claim?: Date;
 	withdrawInvestment?: Date;
 	botHack?: Date;
+	rollDice?: Date;
 }
 
 export const TimeStates = {
@@ -12,6 +13,7 @@ export const TimeStates = {
 	withdrawInvestment : createDuration(30, 'minutes'),
 	botHack            : createDuration(60, 'minutes'),
 	userHack           : createDuration(15, 'minutes'),
+	rollDice           : createDuration(10, 'seconds'),
 };
 
 export type TimeStateName = keyof (typeof TimeStates);

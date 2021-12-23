@@ -49,6 +49,10 @@ export default class GambleDiceRoll extends SlashCommand {
 
 		let user = await User.getOrCreate(ctx.user.id);
 
+		if (!user.cooldownManager().canUse('rollDice')) {
+			return `Slow down... You can run this command in ${user.cooldownManager().timeLeft('rollDice', true)}.`;
+		}
+
 		if (!user.balanceManager().hasMoney('balance')) {
 			return `You don't have any money, pleb`;
 		}
@@ -76,6 +80,7 @@ export default class GambleDiceRoll extends SlashCommand {
 
 		diceRoll.roll();
 
+		user.cooldownManager().setUsed('rollDice');
 		user.balanceManager().deductFromBalance(input.value(), 'Dice roll');
 		await user.executeQueued();
 
