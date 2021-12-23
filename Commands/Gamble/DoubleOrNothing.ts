@@ -26,7 +26,12 @@ export default class DoubleOrNothing extends SlashCommand {
 			return `You can only use /gamble commands in the ${gambleChannel.toString()} channel.`;
 		}
 
-		const user  = await User.getOrCreate(ctx.user.id);
+		const user = await User.getOrCreate(ctx.user.id);
+
+		if (!user.balanceManager().hasMoney('balance')) {
+			return `You don't have any money, pleb`;
+		}
+
 		const input = new NumberInput(String(user.balanceManager().get('balance')), user).parse();
 
 		if (!input.isValid()) {

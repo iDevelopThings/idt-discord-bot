@@ -10,7 +10,10 @@ export default class Balance {
 
 	constructor(private user: User) {}
 
-	hasMoney(): boolean {
+	hasMoney(type: keyof IBalances = null): boolean {
+		if (type) {
+			return this.hasBalance('1', type);
+		}
 		return this.hasBalance('1', 'balance') || this.hasBalance('1', 'invested');
 	}
 
