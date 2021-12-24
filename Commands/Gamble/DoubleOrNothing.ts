@@ -20,7 +20,6 @@ export default class DoubleOrNothing extends SlashCommand {
 					name        : 'amount',
 					description : 'Specify a custom amount to use. If none is specified, your whole balance will be used.',
 					required    : false,
-					default     : true,
 					type        : CommandOptionType.STRING,
 				}
 			]
