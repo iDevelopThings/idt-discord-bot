@@ -1,6 +1,6 @@
-import {CommonMysteryBox} from "./items/CommonMysteryBox"
-import {EpicMysteryBox} from "./items/EpicMysteryBox"
-import {RareMysteryBox} from "./items/RareMysteryBox"
+import {CommonMysteryBox} from "./Items/CommonMysteryBox"
+import {EpicMysteryBox} from "./Items/EpicMysteryBox"
+import {RareMysteryBox} from "./Items/RareMysteryBox"
 export const itemTypesTransformer = {
 	keepDiscriminatorProperty : true,
 	discriminator             : {
