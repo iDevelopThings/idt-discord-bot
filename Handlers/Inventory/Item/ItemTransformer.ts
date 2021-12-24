@@ -19,7 +19,7 @@ export class ItemTransformer {
 	public static itemImages: Map<string, Image>                 = new Map();
 
 	public static async loadItemClasses() {
-		const results = sync('items/**/*{.ts,.js}', {
+		const results = sync('Items/**/*{.ts,.js}', {
 			cwd : __dirname
 		});
 
