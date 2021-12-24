@@ -1,5 +1,5 @@
 import {MessageEmbed} from "discord.js";
-import {SlashCommand} from "slash-create";
+import {CommandOptionType, SlashCommand} from "slash-create";
 import CommandContext from "slash-create/lib/context";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
@@ -15,6 +15,15 @@ export default class DoubleOrNothing extends SlashCommand {
 			name           : "double",
 			deferEphemeral : true,
 			description    : "Double your money or get nothing",
+			options        : [
+				{
+					name        : 'amount',
+					description : 'Specify a custom amount to use. If none is specified, your whole balance will be used.',
+					required    : false,
+					default     : true,
+					type        : CommandOptionType.STRING,
+				}
+			]
 		});
 
 		this.filePath = __filename;
@@ -33,7 +42,13 @@ export default class DoubleOrNothing extends SlashCommand {
 			return `You don't have any money, pleb`;
 		}
 
-		const input = new NumberInput(String(user.balanceManager().get('balance')), user).parse();
+		let amountInput = ctx.options?.amount;
+
+		if (!amountInput) {
+			amountInput = user.balanceManager().get('balance');
+		}
+
+		const input = new NumberInput(String(amountInput), user).parse();
 
 		if (!input.isValid()) {
 			return input.error();
