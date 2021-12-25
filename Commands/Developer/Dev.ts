@@ -3,7 +3,7 @@ import {TextChannel, Util} from "discord.js";
 import path from "path";
 import readLastLines from 'read-last-lines';
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import SentMessage from "../../Models/SentMessage";
 import User from "../../Models/User/User";
 import {getChannelById, guild, guildId} from "../../Util/Bot";

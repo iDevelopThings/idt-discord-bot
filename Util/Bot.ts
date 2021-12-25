@@ -1,9 +1,12 @@
-import {Guild, TextChannel} from "discord.js";
+import {Guild, GuildMember, MessageEmbed, MessageOptions, TextChannel} from "discord.js";
 import DiscordJsManager from "../Core/Discord/DiscordJsManager";
 
 export const guildId = process.env.GUILD_ID;
 export const guild   = (): Guild => DiscordJsManager.client().guilds.cache.get(guildId);
 
+export const getGuildMember = (id: string): GuildMember => {
+	return guild().members.cache.get(id);
+};
 
 export const getGambleChannel = (): TextChannel => {
 	return DiscordJsManager.client().channels.cache.find((c: TextChannel) => {
@@ -15,6 +18,14 @@ export const getChannel = (channel: string): TextChannel => {
 	return DiscordJsManager.client().channels.cache.find(
 		(c: TextChannel) => c.isText() && c.name.toLowerCase() === channel.toLowerCase()
 	) as TextChannel;
+};
+
+export const sendEmbedInChannel = (channel: string, embed: MessageEmbed | MessageEmbed[], messageOptions: MessageOptions = {}) => {
+	if (!Array.isArray(embed)) {
+		embed = [embed];
+	}
+
+	getChannel(channel).send({...messageOptions, embeds : embed});
 };
 
 export const getChannelById = (id: string) => {

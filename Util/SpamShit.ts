@@ -1,6 +1,5 @@
 import {Duration} from "dayjs/plugin/duration";
 import _ from "lodash";
-import Configuration from "../Configuration";
 import User from "../Models/User/User";
 import {getChannel} from "./Bot";
 import {createDuration} from "./Date";
@@ -144,7 +143,7 @@ export async function sendSpamLogs(channel: string = 'mod-logs', users: User[] =
 
 	for (let user of users) {
 		const info = user.spamInfo;
-		tChannel.send({embed : user.spamCalcsEmbed()});
+		tChannel.send({embeds : [user.spamCalcsEmbed()]});
 	}
 
 	return true;

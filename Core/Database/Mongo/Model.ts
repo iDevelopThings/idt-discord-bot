@@ -1,6 +1,5 @@
 import {classToPlainFromExist, Exclude} from "class-transformer";
-import {ClassTransformOptions} from "class-transformer/types/interfaces";
-import {Collection, FilterQuery, FindOneOptions, ObjectId, ReplaceOneOptions, UpdateQuery, WithoutProjection} from "mongodb";
+import {Collection, FilterQuery, FindOneOptions, ObjectId, ReplaceOneOptions, WithoutProjection} from "mongodb";
 import pluralize from 'pluralize';
 import {container} from "tsyringe";
 import {Container} from "winston";

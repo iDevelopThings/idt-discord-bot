@@ -4,7 +4,7 @@ import {ColorResolvable, MessageEmbed} from "discord.js";
 import {ActivityName, IActivities} from "../../Models/User/Activities";
 import {SkillRequirements} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
-import {getChannel, guild} from "../../Util/Bot";
+import {getChannel, getGuildMember, guild, sendEmbedInChannel} from "../../Util/Bot";
 import {dayjs, timeRemaining} from "../../Util/Date";
 import {formatMoney, Numbro, percentOf} from "../../Util/Formatter";
 import NumberInput, {SomeFuckingValue} from "../../Util/NumberInput";
@@ -39,7 +39,7 @@ export type RandomEvents = RandomEventInformation[];
 
 export interface SuccessfulResponse {
 	moneyGained: number;
-	message: string
+	message: string;
 }
 
 interface ActivitiesListItem {
@@ -148,7 +148,7 @@ export default abstract class Activity {
 
 	public async handleRandomEvent(user: User, event: RandomEventInformation) {
 		try {
-			const member         = await guild().member(user.id);
+			const member         = await getGuildMember(user.id);
 			const randomAmt      = percentOf(this.startingCost().multiply(2).value().toString(), getRandomInt(10, 30).toString() + '%');
 			const dm             = await member.createDM();
 			const additionalInfo = await event.additionalHandling(randomAmt);
@@ -158,14 +158,16 @@ export default abstract class Activity {
 				.deductFromBalance(randomAmt, `${this.title()} random event - ${event.name}`)
 				.executeQueued();
 
-			getChannel('activities').send(
-				new MessageEmbed()
-					.setAuthor(user.displayName, user.getAvatar())
-					.setTitle(this.title())
-					.setDescription(`${user.toString()} It all went down during ${this.title()}... \n${event.message}\n${additionalInfo}`)
-					.addField('Cost: ', formatMoney(randomAmt), true)
-					.setColor('DARK_RED')
-			);
+			getChannel('activities').send({
+				embeds : [
+					new MessageEmbed()
+						.setAuthor(user.embedAuthorInfo)
+						.setTitle(this.title())
+						.setDescription(`${user.toString()} It all went down during ${this.title()}... \n${event.message}\n${additionalInfo}`)
+						.addField('Cost: ', formatMoney(randomAmt), true)
+						.setColor('DARK_RED')
+				]
+			});
 
 		} catch (error) {
 			Log.error(error.toString());
@@ -202,15 +204,15 @@ export default abstract class Activity {
 		user.activityManager().removeActivity(this.name());
 		await user.executeQueued();
 
-		getChannel('activities').send(
+		sendEmbedInChannel(
+			'activities',
 			new MessageEmbed()
-				.setAuthor(user.displayName, user.getAvatar())
+				.setAuthor(user.embedAuthorInfo)
 				.setTitle(this.title())
 				.setDescription(`${user.toString()} ${response.message}`)
 				.addField('Gains: ', formatMoney(response.moneyGained))
 				.setColor('GREEN')
 		);
-		// We don't need to await this and hold up other processing.
-		//		user.sendDm(response.message);
+
 	}
 }

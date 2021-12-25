@@ -1,9 +1,9 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import User from "../../Models/User/User";
 import {BalanceHistoryChangeType} from "../../Models/User/UserInformationInterfaces";
-import {getChannel, guildId, isOneOfChannels} from "../../Util/Bot";
+import {guildId, isOneOfChannels} from "../../Util/Bot";
 import {formatMoney, InvalidNumberResponse, isValidNumber} from "../../Util/Formatter";
 import NumberInput from "../../Util/NumberInput";
 
@@ -105,12 +105,12 @@ export default class Balance extends SlashCommand {
 	private async handleBalanceOutput(ctx: CommandContext, user: User) {
 		const embed = new MessageEmbed()
 			.setColor('BLUE')
-			.setAuthor(user.username, user.avatar, "")
+			.setAuthor(user.embedAuthorInfo)
 			.addField('Balance:', formatMoney(user.balances.balance), true)
 			.addField('Invested:', formatMoney(user.balances.invested), true)
-			.addField('Income:', user.balanceManager().income(true), true);
+			.addField('Income:', <string>user.balanceManager().income(true), true);
 
-		await ctx.send({embeds : [embed]});
+		await ctx.send({embeds : [embed.toJSON()]});
 	}
 
 	/**
@@ -159,7 +159,7 @@ export default class Balance extends SlashCommand {
 
 		const embed = new MessageEmbed()
 			.setColor('BLUE')
-			.setAuthor(user.username, user.avatar, "");
+			.setAuthor(user.embedAuthorInfo);
 
 		if (!Array.isArray(user.balanceHistory) || user.balanceHistory.length === 0) {
 			embed.addField('No Balance History', 'Start gambling bich...');
@@ -177,6 +177,6 @@ export default class Balance extends SlashCommand {
 			}
 		}
 
-		await ctx.send({embeds : [embed]});
+		await ctx.send({embeds : [embed.toJSON()]});
 	}
 }

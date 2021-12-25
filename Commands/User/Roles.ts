@@ -1,6 +1,6 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
-import {guild, guildId} from "../../Util/Bot";
+import {CommandContext} from "slash-create";
+import {getGuildMember, guild, guildId} from "../../Util/Bot";
 
 const roleChoices = [
 	{name : 'Developer Role', value : 'Developer'},
@@ -36,7 +36,7 @@ export default class Roles extends SlashCommand {
 			return 'Somehow this role doesnt exist....';
 		}
 
-		const user = guild().members.resolve(ctx.user.id);
+		const user = getGuildMember(ctx.user.id);
 
 		if (!user) {
 			return 'Hmmm something borked aye';

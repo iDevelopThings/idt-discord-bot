@@ -2,10 +2,10 @@ import {Log} from "@envuso/common";
 import {createCanvas, loadImage, CanvasRenderingContext2D} from 'canvas';
 import {MessageAttachment} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
-import {getChannel, getChannelById, guildId, isOneOfChannels} from "../../Util/Bot";
+import {getChannelById, guildId, isOneOfChannels} from "../../Util/Bot";
 import {formatMoney, formatXp} from "../../Util/Formatter";
 
 
@@ -91,7 +91,9 @@ export default class Leaderboard extends SlashCommand {
 			await this.drawBalances(ctx, context);
 
 			const channel = getChannelById(ctx.channelID);
-			await channel.send('', new MessageAttachment(canvas.toBuffer(), 'leaderboard.jpeg'));
+			await channel.send({
+				attachments : [new MessageAttachment(canvas.toBuffer(), 'leaderboard.jpeg')]
+			});
 
 			await ctx.defer(false);
 			await ctx.delete();

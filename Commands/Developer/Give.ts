@@ -1,5 +1,5 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import Skills, {AvailableSkills, SkillName} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
 import {guildId} from "../../Util/Bot";

@@ -287,7 +287,7 @@ export class Gambling extends GamblingInstance {
 	private async sendBetMessage() {
 		this._embed = this.createBetMessage();
 
-		this._betMessage = await this._channel.send(this._embed);
+		this._betMessage = await this._channel.send({embeds: [this._embed]});
 	}
 
 	/**
@@ -302,7 +302,7 @@ export class Gambling extends GamblingInstance {
 
 		this._embed = this.createBetMessage();
 
-		await this._betMessage.edit(this._embed);
+		await this._betMessage.edit({embeds : [this._embed]});
 	}
 
 	/**

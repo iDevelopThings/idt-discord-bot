@@ -1,6 +1,5 @@
-import {MessageEmbed} from "discord.js";
-import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext, {MessageOptions} from "slash-create/lib/context";
+import {ColorResolvable, MessageEmbed} from "discord.js";
+import {CommandOptionType, SlashCommand, MessageOptions, CommandContext} from "slash-create";
 import Activity, {ActivityType} from "../../Handlers/Activities/Activity";
 import {activityList} from "../../Handlers/Activities/ActivityList";
 import {ActivityName} from "../../Models/User/Activities";
@@ -138,7 +137,7 @@ export default class RunActivity extends SlashCommand {
 			embeds.push(
 				new MessageEmbed()
 					.setTitle(instance.title())
-					.setColor(activity.color)
+					.setColor(activity.color as ColorResolvable)
 					.addField('Starting Cost: ', formatMoney(instance.startingCost().value()))
 					.addField('Min', '↓')
 					.addField('Min Percent', `${chance.regular.min}-${chance.lucky.min}`, true)
@@ -159,7 +158,7 @@ export default class RunActivity extends SlashCommand {
 		await ctx.defer(false);
 		await ctx.delete();
 
-		await getChannelById(ctx.channelID).send(embeds);
+		await getChannelById(ctx.channelID).send({embeds});
 	}
 }
 

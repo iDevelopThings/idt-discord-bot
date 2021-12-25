@@ -1,10 +1,9 @@
-import fs from "fs";
 import Konva from "konva/cmj";
 import User from "../../Models/User/User";
 import {createCanvas} from "canvas";
-import {formatMoney, formatNumber} from "../../Util/Formatter";
+import {formatNumber} from "../../Util/Formatter";
 import {BaseInventoryItem} from "./Item/BaseInventoryItem";
-import {ItemTransformer} from "./Item/ItemTransformer";
+import {Item} from "./Item/Manager/Item";
 import UserInventoryManager from "./UserInventoryManager";
 
 export class InventoryInterfaceRenderer {
@@ -363,7 +362,7 @@ export class InventoryInterfaceRenderer {
 	}
 
 	private drawItemImage(slotContentsGroup: Konva.Group, item: BaseInventoryItem) {
-		const itemImage = ItemTransformer.itemImages.get(item.id);
+		const itemImage = Item.getImage(item.id);
 
 		const imgDimensions = this.getScaledImageCoordinates(
 			slotContentsGroup.width() - 60,

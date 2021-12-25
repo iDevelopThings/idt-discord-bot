@@ -5,7 +5,8 @@ config();
 import './Util/Date';
 import {Log} from "@envuso/common";
 
-import {ItemTransformer} from "./Handlers/Inventory/Item/ItemTransformer";
+import {Item} from "./Handlers/Inventory/Item/Manager/Item";
+import {ItemTransformGenerator} from "./Handlers/Inventory/Item/Manager/ItemTransformGenerator";
 
 import DatabaseManager from "./Core/Database/DatabaseManager";
 import DiscordJsManager from "./Core/Discord/DiscordJsManager";
@@ -22,7 +23,8 @@ SlashCreatorManager.get().boot();
 
 
 async function boot() {
-	await ItemTransformer.loadItemClasses();
+	await Item.loadItemClasses();
+	ItemTransformGenerator.generateTypescriptDefs();
 
 	loadDiscordEventHandlers();
 

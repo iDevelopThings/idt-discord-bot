@@ -1,5 +1,4 @@
 import CronJob from "../../Handlers/CronJob/CronJob";
-import {sendSpamLogs} from "../../Util/SpamShit";
 
 export default class SpamCalcsInfo extends CronJob {
 	handlerId = 'moderation/spam-calcs-info';

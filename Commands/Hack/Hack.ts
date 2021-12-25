@@ -1,5 +1,5 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
 import {getChannel, guildId} from '../../Util/Bot';

@@ -83,7 +83,7 @@ export class ModerationLog extends Model<ModerationLog> {
 
 		const embed = new MessageEmbed()
 			.setColor('GREEN')
-			.setAuthor(user.username, user.avatar)
+			.setAuthor(user.embedAuthorInfo)
 			.addField('User', user.username)
 			.addField('Actioned By', actionedBy.username);
 
@@ -100,7 +100,7 @@ export class ModerationLog extends Model<ModerationLog> {
 				return;
 		}
 
-		return getChannel('mod-logs').send({embed});
+		return getChannel('mod-logs').send({embeds : [embed]});
 	}
 
 

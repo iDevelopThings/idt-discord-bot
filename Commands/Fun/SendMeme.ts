@@ -1,9 +1,8 @@
-import {TextChannel} from "discord.js";
 import {SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import MemeApi from "../../Handlers/MemeApi";
 import Meme from "../../Models/Meme";
-import {getChannel, guild, guildId} from "../../Util/Bot";
+import {getChannel, guildId} from "../../Util/Bot";
 
 export default class SendMeme extends SlashCommand {
 

@@ -1,6 +1,6 @@
-import {GuildMember, MessageReaction} from "discord.js";
+import {MessageReaction, User as DiscordUser} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import User from "../../Models/User/User";
 import {StatisticsKeys} from "../../Models/User/UserInformationInterfaces";
 import {getChannel, getChannelById, guildId} from "../../Util/Bot";
@@ -206,9 +206,10 @@ export default class Invest extends SlashCommand {
 		await message.react(THUMBS_UP);
 		await message.react(THUMBS_DOWN);
 
-		const reactions = await message.awaitReactions((reaction: MessageReaction, reactedUser: GuildMember) => {
-			return [THUMBS_UP, THUMBS_DOWN].includes(reaction.emoji.name) && reactedUser.id === user.id;
-		}, {
+		const reactions = await message.awaitReactions({
+			filter : (reaction: MessageReaction, reactedUser: DiscordUser) => {
+				return [THUMBS_UP, THUMBS_DOWN].includes(reaction.emoji.name) && reactedUser.id === user.id;
+			},
 			time      : 30_000,
 			maxEmojis : 1
 		});

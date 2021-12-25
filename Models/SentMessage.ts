@@ -1,4 +1,3 @@
-import {Log} from "@envuso/common";
 import {Message, MessageType, TextChannel} from "discord.js";
 import {ObjectId} from "mongodb";
 import Model from "../Core/Database/Mongo/Model";

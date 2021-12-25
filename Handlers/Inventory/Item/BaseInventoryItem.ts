@@ -1,6 +1,9 @@
 import {Exclude} from "class-transformer";
+import {MessageEmbed, TextChannel} from "discord.js";
 import {Decimal128} from "mongodb";
 import path from "path";
+import User from "../../../Models/User/User";
+import {guild} from "../../../Util/Bot";
 import {numbro} from "../../../Util/Formatter";
 
 export class BaseInventoryItem {
@@ -13,8 +16,20 @@ export class BaseInventoryItem {
 
 	public slot: number = 0;
 
+	constructor(amount: number = 0) {
+		this.amount = amount;
+	}
+
+	itemImageName() {
+		return this.id + '.png';
+	}
+
 	itemImagePath() {
-		return path.join(process.cwd(), 'Assets', 'Items', this.id + '.png');
+		return path.join(process.cwd(), 'Assets', 'Items', this.itemImageName());
+	}
+
+	public getImageUrl() {
+		return `https://storage.idt.dev/discordbot/${this.itemImageName()}`;
 	}
 
 	@Exclude()
@@ -36,4 +51,19 @@ export class BaseInventoryItem {
 		return this;
 	}
 
+	public async redeem(user: User, channelId: string, addToInventory:boolean = false) {
+		return null;
+	}
+
+	async sendRedeemedMessage(user: User, channelId: string, content: string) {
+		const embed = new MessageEmbed()
+			.setColor((this as any).color ?? 'BLUE')
+			.setAuthor(user.embedAuthorInfo)
+			.setTitle(`Redeemed ${this.name}`)
+			.setThumbnail(this.getImageUrl())
+			.setDescription(content);
+
+		const channel = guild().channels.cache.get(channelId) as TextChannel;
+		await channel.send({embeds : [embed]});
+	}
 }

@@ -1,6 +1,6 @@
-import {GuildMember, MessageEmbed} from "discord.js";
+import {ColorResolvable, GuildMember, MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import User from "../../Models/User/User";
 import {IPreferences} from "../../Models/User/UserInformationInterfaces";
 import UserManager from "../../Models/User/UserManager";
@@ -88,7 +88,7 @@ export default class Preferences extends SlashCommand {
 
 	private returnCurrentPreferences(discordUser: GuildMember, user: User) {
 		const channelsEmbed = new MessageEmbed()
-			.setColor(user.color)
+			.setColor(user.color as ColorResolvable)
 			.setTitle('Channels');
 
 		const channelTypes = [

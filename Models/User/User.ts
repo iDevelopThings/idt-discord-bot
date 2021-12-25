@@ -1,6 +1,6 @@
 import {Log} from "@envuso/common";
 import {Type} from "class-transformer";
-import {MessageEmbed} from "discord.js";
+import {EmbedAuthorData, MessageEmbed} from "discord.js";
 import {ObjectId} from "mongodb";
 import Configuration from "../../Configuration";
 import {id} from "../../Core/Database/ModelDecorators";
@@ -107,6 +107,13 @@ export default class User extends Model<User> {
 		return `<@${this.id}>`;
 	}
 
+	get embedAuthorInfo(): EmbedAuthorData {
+		return {
+			name    : this.displayName,
+			iconURL : this.getAvatar(),
+		};
+	}
+
 	static async getOrCreate(discordId: string): Promise<User> {
 		let user = await User.findOne<User>({id : discordId});
 
@@ -211,14 +218,14 @@ export default class User extends Model<User> {
 		const info = this.spamInfo;
 
 		return new MessageEmbed()
-			.setAuthor(this.username, this.getAvatar())
-			.addField('Has spam reduction?', info.is, true)
-			.addField('Xp reduction: ', info.xpReducer, true)
-			.addField('Spam counter: ', info.counter, true)
-			.addField('Is fast messaging: ', info.fastMessaging, true)
-			.addField('Is lots of messaging: ', info.lotsOfMessaging, true)
-			.addField('Duration in seconds:', info.durationAs.s, true)
-			.addField('Duration in hours:', info.durationAs.h, true);
+			.setAuthor(this.embedAuthorInfo)
+			.addField('Has spam reduction?', String(info.is), true)
+			.addField('Xp reduction: ', String(info.xpReducer), true)
+			.addField('Spam counter: ', info.counter.toString(), true)
+			.addField('Is fast messaging: ', String(info.fastMessaging), true)
+			.addField('Is lots of messaging: ', String(info.lotsOfMessaging), true)
+			.addField('Duration in seconds:', info.durationAs.s.toString(), true)
+			.addField('Duration in hours:', info.durationAs.h.toString(), true);
 	}
 }
 

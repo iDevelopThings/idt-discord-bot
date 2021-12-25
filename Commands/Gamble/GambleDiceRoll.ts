@@ -1,13 +1,13 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import {DiceRoll} from "../../Handlers/Gambling/DiceRoll/DiceRoll";
 import User from "../../Models/User/User";
 import {getChannel, guildId} from "../../Util/Bot";
-import {formatMoney, numbro} from "../../Util/Formatter";
+import {numbro} from "../../Util/Formatter";
 import NumberInput from "../../Util/NumberInput";
-import {getRandomInt, getRandomPercentage} from "../../Util/Random";
+import {getRandomPercentage} from "../../Util/Random";
 
 export default class GambleDiceRoll extends SlashCommand {
 	constructor(creator) {
@@ -103,12 +103,13 @@ export default class GambleDiceRoll extends SlashCommand {
 				embeds : [
 					new MessageEmbed()
 						.setColor('RED')
-						.setAuthor(user.username, user.avatar, "")
+						.setAuthor(user.embedAuthorInfo)
 						.setTitle('Unlucky, you lost')
 						.setDescription(`The winning number was ${diceRoll.valuesTotal()}`)
 						.addField('New balance', user.balanceManager().getFormattedBalance(), false)
-						.addField('Total dice', diceRoll.getDieCount(), true)
-						.addField('Total sides', diceRoll.getTotalSides(), true)
+						.addField('Total dice', String(diceRoll.getDieCount()), true)
+						.addField('Total sides', String(diceRoll.getTotalSides()), true)
+						.toJSON()
 				]
 			});
 
@@ -125,13 +126,14 @@ export default class GambleDiceRoll extends SlashCommand {
 			embeds : [
 				new MessageEmbed()
 					.setColor('GREEN')
-					.setAuthor(user.username, user.avatar, "")
+					.setAuthor(user.embedAuthorInfo)
 					.setTitle('Great success')
 					.setDescription(`Your wager of ${input.formattedMoneyValue()} was multiplied by ${diceRoll.getTotalSides()}.`)
 					.addField('Winnings', wonAmountFormatted, true)
 					.addField('New balance', user.balanceManager().getFormattedBalance(), true)
-					.addField('Total dice', diceRoll.getDieCount(), true)
-					.addField('Total sides', diceRoll.getTotalSides(), true)
+					.addField('Total dice', String(diceRoll.getDieCount()), true)
+					.addField('Total sides', String(diceRoll.getTotalSides()), true)
+					.toJSON()
 			]
 		});
 	}

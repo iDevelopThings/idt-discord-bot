@@ -1,8 +1,7 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
-import {GamblingColor} from "../../../Handlers/Gambling/Gambling";
-import {ItemTransformer} from "../../../Handlers/Inventory/Item/ItemTransformer";
+import {CommandContext} from "slash-create";
 import {ItemIdentifiers} from "../../../Handlers/Inventory/Item/ItemTypes";
+import {Item} from "../../../Handlers/Inventory/Item/Manager/Item";
 import User from "../../../Models/User/User";
 import {guildId} from "../../../Util/Bot";
 import NumberInput from "../../../Util/NumberInput";
@@ -22,7 +21,7 @@ export default class InventoryAddItem extends SlashCommand {
 					name        : 'item',
 					description : 'The item to add',
 					type        : CommandOptionType.STRING,
-					choices     : ItemTransformer.itemClasses.map(c => {
+					choices     : Item.itemClasses.map(c => {
 						return {
 							name  : c.instance.name,
 							value : c.instance.id,
@@ -34,6 +33,12 @@ export default class InventoryAddItem extends SlashCommand {
 					name        : 'amount',
 					description : 'The amount of the item to add',
 					type        : CommandOptionType.STRING,
+					required    : false,
+				},
+				{
+					name        : 'user',
+					description : 'The user to give the item to',
+					type        : CommandOptionType.USER,
 					required    : false,
 				}
 			]
@@ -51,21 +56,22 @@ export default class InventoryAddItem extends SlashCommand {
 
 		const addOptions = ctx.options as {
 			item: ItemIdentifiers,
-			amount?: string
+			amount?: string,
+			user?: string,
 		};
 
-		if (!ItemTransformer.isItem(addOptions.item)) {
+		if (!Item.isItem(addOptions.item)) {
 			return `This isn't a valid item id.`;
 		}
 
-		const user        = await User.getOrCreate(ctx.user.id);
+		const user        = await User.getOrCreate(addOptions?.user ?? ctx.user.id);
 		const amountInput = new NumberInput((addOptions.amount || '1'), user).parse(false);
 
 		if (!amountInput.isValid()) {
 			return amountInput.error();
 		}
 
-		const item = ItemTransformer.getItemInstance(addOptions.item);
+		const item = Item.get(addOptions.item);
 
 		if (!item) {
 			return `This isn't a valid item id.`;

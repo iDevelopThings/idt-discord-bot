@@ -7,7 +7,7 @@ export enum ClientEventsTypes {
 	GUILD_MEMBER_REMOVE          = 'guildMemberRemove',
 	GUILD_MEMBER_UPDATE          = 'guildMemberUpdate',
 	GUILD_MEMBER_PRESENCE_UPDATE = 'presenceUpdate',
-	GUILD_MESSAGE_SENT           = 'message',
+	GUILD_MESSAGE_SENT           = 'messageCreate',
 }
 
 export default abstract class BaseEventHandler<K extends keyof ClientEvents> {

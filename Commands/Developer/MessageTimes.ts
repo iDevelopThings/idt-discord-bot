@@ -1,9 +1,7 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
-import User from "../../Models/User/User";
-import {getChannelById, guild, guildId} from "../../Util/Bot";
+import {CommandContext} from "slash-create";
+import {guildId} from "../../Util/Bot";
 import {adminPermissionsForCommand, isAdmin} from "../../Util/Role";
-import {getNewSpamInflictedXp, sendSpamLogs} from "../../Util/SpamShit";
 
 export default class MessageTimes extends SlashCommand {
 	constructor(creator) {
@@ -31,10 +29,7 @@ export default class MessageTimes extends SlashCommand {
 			return "You cannot use this command";
 		}
 
-
-
 		return 'boosh';
-
 	}
 
 

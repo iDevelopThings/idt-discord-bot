@@ -1,6 +1,6 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import DiscordJsManager from "../../Core/Discord/DiscordJsManager";
 import User from "../../Models/User/User";
 import {getChannel, guildId} from "../../Util/Bot";
@@ -70,9 +70,10 @@ export default class DoubleOrNothing extends SlashCommand {
 				embeds : [
 					new MessageEmbed()
 						.setColor('GREEN')
-						.setAuthor(user.username, user.avatar, "")
+						.setAuthor(user.embedAuthorInfo)
 						.setTitle('Great success')
 						.setDescription(`Your balance is now: ${formatMoney(user.balanceManager().get('balance'))}`)
+						.toJSON()
 				]
 			});
 			return;
@@ -90,9 +91,10 @@ export default class DoubleOrNothing extends SlashCommand {
 			embeds : [
 				new MessageEmbed()
 					.setColor('RED')
-					.setAuthor(user.username, user.avatar, "")
+					.setAuthor(user.embedAuthorInfo)
 					.setTitle('Unlucky.')
 					.setDescription(`You lost: ${formatMoney(amount)}`)
+					.toJSON()
 			]
 		});
 	}

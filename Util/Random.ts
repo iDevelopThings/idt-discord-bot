@@ -1,5 +1,11 @@
 const random     = require('random');
 const seedrandom = require('seedrandom');
+import {Chance} from 'chance';
+
+
+export const getChanceInstance = (): Chance.Chance => {
+	return new Chance(require('crypto').randomBytes(10).toString('hex'));
+};
 
 
 export const getRandomInstance = () => {

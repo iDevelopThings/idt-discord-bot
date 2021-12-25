@@ -1,5 +1,5 @@
 import {Log} from "@envuso/common";
-import {guild} from "../../Util/Bot";
+import {getGuildMember, guild} from "../../Util/Bot";
 import {getRole} from "../../Util/Role";
 import User from "../User/User";
 import ModerationLog, {IModerationLog, IModerationMuteLog, ModerationType} from "./ModerationLog";
@@ -8,7 +8,7 @@ export default class Moderation {
 	constructor(private user: User) {}
 
 	public async mute(minutes: number, reason: string, actionedBy: string) {
-		const member = guild().member(this.user.id);
+		const member = getGuildMember(this.user.id);
 
 		if (!member) {
 			return 'Unable to find member';
@@ -27,7 +27,7 @@ export default class Moderation {
 	}
 
 	public async unmute() {
-		const member = guild().member(this.user.id);
+		const member = getGuildMember(this.user.id);
 
 		if (!member) {
 			return 'Unable to find member';

@@ -1,5 +1,5 @@
 import {SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import User from "../../../Models/User/User";
 import {guildId} from "../../../Util/Bot";
 

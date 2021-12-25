@@ -1,5 +1,5 @@
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import {GamblingInstanceManager, GamblingInstanceType} from "../../Handlers/Gambling/GamblingInstanceManager";
 import {Gambling, GamblingColor} from "../../Handlers/Gambling/Gambling";
 import User from "../../Models/User/User";
@@ -18,7 +18,6 @@ export default class GambleRedBlack extends SlashCommand {
 					name        : "amount",
 					description : "Gamble against red/black with a predefined amount.",
 					type        : CommandOptionType.SUB_COMMAND,
-					default     : true,
 					options     : [
 						{
 							name        : "color",
@@ -48,7 +47,6 @@ export default class GambleRedBlack extends SlashCommand {
 					name        : "percent",
 					description : "Use short methods like all, half etc",
 					type        : CommandOptionType.SUB_COMMAND,
-					default     : false,
 					options     : [
 						{
 							name        : "color",

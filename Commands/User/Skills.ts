@@ -1,9 +1,9 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import {AvailableSkills} from "../../Models/User/Skills";
 import User from "../../Models/User/User";
-import {guild, guildId} from "../../Util/Bot";
+import {getGuildMember, guild, guildId} from "../../Util/Bot";
 import {formatXp} from "../../Util/Formatter";
 
 export default class Skills extends SlashCommand {
@@ -31,12 +31,12 @@ export default class Skills extends SlashCommand {
 		const userId = String(ctx.options.user ?? ctx.user.id);
 		const user   = await User.getOrCreate(userId);
 
-		const member = guild().members.cache.get(userId);
+		const member = getGuildMember(userId);
 
 		const embeds = [
 			new MessageEmbed()
 				.setColor(member.displayHexColor)
-				.setAuthor(user.displayName, user.avatar)
+				.setAuthor(user.embedAuthorInfo)
 		];
 
 		Object.keys(user.skills).forEach(key => {

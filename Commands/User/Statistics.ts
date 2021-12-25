@@ -1,8 +1,8 @@
 import {MessageEmbed} from "discord.js";
 import {CommandOptionType, SlashCommand} from "slash-create";
-import CommandContext from "slash-create/lib/context";
+import {CommandContext} from "slash-create";
 import User from "../../Models/User/User";
-import {guild, guildId} from "../../Util/Bot";
+import {getGuildMember, guild, guildId} from "../../Util/Bot";
 import {formatMoney} from "../../Util/Formatter";
 import {getNewSpamInflictedXp} from "../../Util/SpamShit";
 
@@ -29,14 +29,14 @@ export default class Statistics extends SlashCommand {
 		const userId = String(ctx.options.user ?? ctx.user.id);
 		const user   = await User.getOrCreate(userId);
 
-		const member = guild().members.cache.get(userId);
+		const member = getGuildMember(userId);
 
 		const formatNumber = (val: number) => {
 			if (isNaN(val)) {
-				return 0;
+				return String(0);
 			}
 
-			return val;
+			return String(val);
 		};
 
 		const [messageXpRate] = await getNewSpamInflictedXp(30, user);
@@ -45,7 +45,7 @@ export default class Statistics extends SlashCommand {
 			embeds : [
 				new MessageEmbed()
 					.setColor(member.displayHexColor)
-					.setAuthor(user.displayName, user.avatar)
+					.setAuthor(user.embedAuthorInfo)
 					.addField('Win/loss ratio', formatNumber(user.statistics.gambling.wins.count / user.statistics.gambling.losses.count), true)
 					.addField('Most invested', formatMoney(user.statistics.balance.mostInvested), true)
 					.addField('Most lost to taxes', formatMoney(user.statistics.balance.mostLostToTaxes), true)
