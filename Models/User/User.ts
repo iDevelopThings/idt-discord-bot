@@ -40,7 +40,7 @@ export default class User extends Model<User> {
 	public cooldowns: ITimeStates                     = {};
 	public preferences: IPreferences;
 	public activities: { [key: string]: IActivities } = {};
-	@Type(() => BaseInventoryItem, itemTypesTransformer)
+	@Type(() => BaseInventoryItem, itemTypesTransformer())
 	public inventory: ItemTypes[]                     = [];
 	public skills: ISkills;
 	public createdAt: Date;

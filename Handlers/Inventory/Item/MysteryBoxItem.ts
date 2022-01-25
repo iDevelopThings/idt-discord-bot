@@ -1,10 +1,12 @@
 import {Log} from "@envuso/common";
+import {Type} from "class-transformer";
 import {ColorResolvable} from "discord.js";
 import User from "../../../Models/User/User";
 import {formatMoney} from "../../../Util/Formatter";
 import {getChanceInstance} from "../../../Util/Random";
 import {BaseInventoryItem} from "./BaseInventoryItem";
 import {Money} from "./Items/Money";
+import {ItemWithWeight} from "./ItemWithWeight";
 
 export enum MysteryBoxRarity {
 	COMMON = 'common',
@@ -15,8 +17,10 @@ export enum MysteryBoxRarity {
 export class MysteryBoxItem extends BaseInventoryItem {
 	public color: ColorResolvable;
 	public rarity: MysteryBoxRarity;
-	public weight: number                            = 0;
-	public items: Array<[BaseInventoryItem, number]> = [];
+	public weight: number = 0;
+
+	@Type(() => ItemWithWeight)
+	public items: ItemWithWeight[] = [];
 
 	public async redeem(user: User, channelId: string, addToInventory: boolean = false) {
 
@@ -34,9 +38,9 @@ export class MysteryBoxItem extends BaseInventoryItem {
 		const items   = [];
 		const weights = [];
 
-		this.items.forEach(([item, weight]) => {
-			items.push(item);
-			weights.push(weight);
+		this.items.forEach((item) => {
+			items.push(item.item);
+			weights.push(item.weight);
 		});
 
 		const item = chance.weighted<Money>(items, weights);

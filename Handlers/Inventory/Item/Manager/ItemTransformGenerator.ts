@@ -26,9 +26,10 @@ export class ItemTransformGenerator {
 				value : itemClass.ctor.name
 			});
 
-			itemTypesConverters.push(`{name : "${itemClass.instance.id}", value : ${itemClass.ctor.name}}`);
+			const importPath = `./${itemClass.location.replace('.ts', '').replace('.js', '')}`
+			itemTypesConverters.push(`{name : "${itemClass.instance.id}", value : import("${importPath}").then(i => i['${itemClass.ctor.name}'])}`);
 
-			itemImports.push(`import {${itemClass.ctor.name}} from "./${itemClass.location.replace('.ts', '').replace('.js', '')}"`);
+			itemImports.push(`import {${itemClass.ctor.name}} from "${importPath}"`);
 		}
 
 		contentSections.push(itemImports.join('\n'));
@@ -41,12 +42,33 @@ export class ItemTransformGenerator {
 
 		Log.info(`Writing ItemTypes.d.ts to ${defPath}`);
 
-		const itemTypesContent = `${itemImports.join('\n')}\nexport const itemTypesTransformer = {
-	keepDiscriminatorProperty : true,
-	discriminator             : {
-		property : 'id',
-		subTypes : [${itemTypesConverters.join(',\n')}]
+		const itemTypesContent = `
+
+const transforms = [];
+
+export const loadTransforms = async () => {
+	const transformers = [
+		${itemTypesConverters.join(',\n')}
+		// {name : "common.mystery.box", value : Promise.resolve(import("./Items/CommonMysteryBox")).then(im => im['CommonMysteryBox'])},
+		// {name : "epic.mystery.box", value : Promise.resolve(import("./Items/EpicMysteryBox")).then(im => im['EpicMysteryBox'])},
+		// {name : "money", value : Promise.resolve(import("./Items/Money")).then(im => im['Money'])},
+		// {name : "rare.mystery.box", value : Promise.resolve(import("./Items/RareMysteryBox")).then(im => im['RareMysteryBox'])}
+	];
+
+	for (let transformer of transformers) {
+		const ctor = await transformer.value;
+		transforms.push({name : transformer.name, value : ctor});
 	}
+};
+
+export const itemTypesTransformer = () => {
+	return {
+		keepDiscriminatorProperty : true,
+		discriminator             : {
+			property : 'id',
+			subTypes : transforms
+		}
+	};
 };`;
 
 		const itemTransformerPath = path.join(process.cwd(), 'Handlers', 'Inventory', 'Item', 'ItemTypeTransformerObject.ts');

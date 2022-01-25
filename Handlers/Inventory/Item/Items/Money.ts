@@ -8,14 +8,11 @@ export class Money extends BaseInventoryItem {
 	public id: string             = 'money';
 	public color: ColorResolvable = 'GOLD';
 
-
 	public async redeem(user: User, channelId: string, addToInventory: boolean = false) {
-
 		user.balanceManager().addToBalance(this.amount, 'redeemed via money item');
 		await user.executeQueued();
 
 		await this.sendRedeemedMessage(user, channelId, `${formatMoney(this.amount)} was added to your balance.`);
-
 	}
 
 }

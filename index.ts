@@ -1,19 +1,20 @@
 import "reflect-metadata";
+import {deserialize} from "bson";
+import {Buffer} from "buffer";
 import {config} from 'dotenv';
 
 config();
 import './Util/Date';
 import {Log} from "@envuso/common";
-
+import {loadTransforms} from "./Handlers/Inventory/Item/ItemTypeTransformerObject";
 import {Item} from "./Handlers/Inventory/Item/Manager/Item";
-import {ItemTransformGenerator} from "./Handlers/Inventory/Item/Manager/ItemTransformGenerator";
-
 import DatabaseManager from "./Core/Database/DatabaseManager";
 import DiscordJsManager from "./Core/Discord/DiscordJsManager";
 import {loadDiscordEventHandlers} from "./Core/Discord/EventHandlers";
 import SlashCreatorManager from "./Core/Discord/SlashCreatorManager";
 import {guild} from "./Util/Bot";
 import CronHandler from "./Handlers/CronJob/CronHandler";
+
 
 const cronHandler     = new CronHandler();
 const databaseManager = new DatabaseManager();
@@ -24,7 +25,8 @@ SlashCreatorManager.get().boot();
 
 async function boot() {
 	await Item.loadItemClasses();
-	ItemTransformGenerator.generateTypescriptDefs();
+	await loadTransforms();
+	//	ItemTransformGenerator.generateTypescriptDefs();
 
 	loadDiscordEventHandlers();
 
@@ -37,6 +39,57 @@ async function boot() {
 	await SlashCreatorManager.get().sync();
 
 	await cronHandler.boot();
+//	const cursor = await User.getCollection<any>().find({});
+//	const users  = await cursor.toArray();
+//
+//	const updatedUsers = [];
+//
+//	for (const user of users) {
+//
+//		const iterate = (obj, usr, builtPath, builtPaths) => {
+//			let thisPath       = '';
+//			let thisBuiltPaths = [];
+//
+//			for (let key of Object.keys(obj)) {
+//				const i = obj[key];
+//
+//				if (i?.bytes && !(i instanceof Decimal128)) {
+//					if (!i?.bytes?.buffer) {
+//						debugger;
+//					}
+//
+//					const buff   = Buffer.from(i.bytes?.buffer);
+//					const binary = new Decimal128(buff);
+//
+//					if (!updatedUsers.includes(user._id.toString())) {
+//						updatedUsers.push(user._id.toString());
+//					}
+//
+//					obj[key] = numbro(NumberInput.convert(NumberInput.someFuckingValueToInt(binary.toString()), user)).format({
+//						mantissa : 2,
+//						average  : false,
+//						output   : "number"
+//					}).toString();
+//
+//					console.log(`${user.username} has currupt data at ${builtPath}`, binary.toString(), numbroParse(binary.toString(), {output : "currency"}));
+//				} else if (typeof i === 'object' && (i !== undefined && i !== null)) {
+//					obj[key] = iterate(obj[key], usr, thisPath + '.' + key, builtPaths);
+//				}
+//			}
+//
+//			return obj;
+//		};
+//
+//		iterate(user, user, 'user', []);
+//
+//		if(updatedUsers.includes(user._id.toString())) {
+//			console.log(`Need to update ${user.username}`);
+//			const u          = hydrateModel(user, User);
+//			const dehydrated = dehydrateModel(u);
+//			await User.getCollection().updateOne({_id : u._id}, {$set : dehydrated});
+//		}
+//
+//	}
 
 	//	ActivityEndedCron.start();
 

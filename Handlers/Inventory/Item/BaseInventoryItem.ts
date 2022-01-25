@@ -1,10 +1,12 @@
-import {Exclude} from "class-transformer";
+import {Exclude, plainToClass, Transform, Type} from "class-transformer";
 import {ColorResolvable, MessageEmbed, TextChannel} from "discord.js";
 import {Decimal128} from "mongodb";
 import path from "path";
 import User from "../../../Models/User/User";
 import {guild} from "../../../Util/Bot";
 import {numbro} from "../../../Util/Formatter";
+import {itemTypesTransformer} from "./ItemTypeTransformerObject";
+import {ItemWithWeight} from "./ItemWithWeight";
 import {MysteryBoxRarity} from "./MysteryBoxItem";
 
 export class BaseInventoryItem {
@@ -19,8 +21,10 @@ export class BaseInventoryItem {
 
 	public color: ColorResolvable;
 	public rarity: MysteryBoxRarity;
-	public weight: number                            = 0;
-	public items: Array<[BaseInventoryItem, number]> = [];
+	public weight: number = 0;
+
+	@Type(() => ItemWithWeight)
+	public items: ItemWithWeight[] = [];
 
 	constructor(amount: number = 0) {
 		this.amount = amount;
