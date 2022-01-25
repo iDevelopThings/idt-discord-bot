@@ -206,6 +206,7 @@ export default class Dev extends SlashCommand {
 				continue;
 			}
 
+			//@ts-ignore
 			const textChannel = (channel as TextChannel);
 			if (!guild().roles.everyone.permissionsIn(textChannel).has('SEND_MESSAGES')) {
 				continue;
@@ -276,7 +277,7 @@ export default class Dev extends SlashCommand {
 			await user.balanceManager().cleanHistory();
 		}
 
-		await ctx.send('All done.')
+		await ctx.send('All done.');
 	}
 }
 

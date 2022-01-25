@@ -1,4 +1,4 @@
-import {classToPlain, plainToClass} from "class-transformer";
+import {instanceToPlain, plainToInstance} from "class-transformer";
 import {ObjectId} from 'mongodb';
 import {ClassType, Ref} from "../index";
 
@@ -27,7 +27,7 @@ export function dehydrateModel<T>(entity: T): Object {
 		entity[ref._id] = new ObjectId(reffedEntity._id);
 	}
 
-	const plain: any = classToPlain(entity, {
+	const plain: any = instanceToPlain(entity, {
 		enableCircularCheck : true,
 		excludePrefixes : ['_']
 	});
@@ -58,5 +58,5 @@ export function dehydrateModel<T>(entity: T): Object {
 }
 
 export function hydrateModel<T>(plain: Object | null, type : ClassType<T>) {
-	return plain ? plainToClass<T, Object>(type, plain) : null;
+	return plain ? plainToInstance<T, Object>(type, plain) : null;
 }

@@ -1,10 +1,11 @@
 import {Exclude} from "class-transformer";
-import {MessageEmbed, TextChannel} from "discord.js";
+import {ColorResolvable, MessageEmbed, TextChannel} from "discord.js";
 import {Decimal128} from "mongodb";
 import path from "path";
 import User from "../../../Models/User/User";
 import {guild} from "../../../Util/Bot";
 import {numbro} from "../../../Util/Formatter";
+import {MysteryBoxRarity} from "./MysteryBoxItem";
 
 export class BaseInventoryItem {
 
@@ -15,6 +16,11 @@ export class BaseInventoryItem {
 	private _amount: Decimal128 = Decimal128.fromString('0');
 
 	public slot: number = 0;
+
+	public color: ColorResolvable;
+	public rarity: MysteryBoxRarity;
+	public weight: number                            = 0;
+	public items: Array<[BaseInventoryItem, number]> = [];
 
 	constructor(amount: number = 0) {
 		this.amount = amount;
@@ -51,7 +57,7 @@ export class BaseInventoryItem {
 		return this;
 	}
 
-	public async redeem(user: User, channelId: string, addToInventory:boolean = false) {
+	public async redeem(user: User, channelId: string, addToInventory: boolean = false) {
 		return null;
 	}
 

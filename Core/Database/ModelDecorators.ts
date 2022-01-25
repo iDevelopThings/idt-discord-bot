@@ -1,4 +1,4 @@
-import {classToPlain, plainToClass, Transform} from "class-transformer";
+import {instanceToPlain, plainToInstance, Transform} from "class-transformer";
 import {ObjectId} from "mongodb";
 import pluralize from "pluralize";
 import {ClassType, Nested, Ref} from "./index";
@@ -33,10 +33,10 @@ export function nested(typeFunction: any) {
 			}
 
 			if (targetType === Array) {
-				return val.value.map(v => plainToClass(typeFunction, v))
+				return val.value.map(v => plainToInstance(typeFunction, v))
 			}
 
-			return plainToClass(typeFunction, val.value)
+			return plainToInstance(typeFunction, val.value)
 		}, {toClassOnly : true})(target, propertyKey);
 
 		Transform((val) => {
@@ -44,10 +44,10 @@ export function nested(typeFunction: any) {
 				return null;
 			}
 			if (targetType === Array) {
-				return val.value.map(v => classToPlain(v))
+				return val.value.map(v => instanceToPlain(v))
 			}
 
-			return classToPlain(val.value)
+			return instanceToPlain(val.value)
 		}, {toPlainOnly : true})(target, propertyKey);
 
 
@@ -84,10 +84,10 @@ export function ref(modelReference: ClassType<any>) {
 			}
 
 			if (targetType === Array) {
-				return val.value.map(v => plainToClass(modelReference, v))
+				return val.value.map(v => plainToInstance(modelReference, v))
 			}
 
-			return plainToClass(modelReference, val.value)
+			return plainToInstance(modelReference, val.value)
 		}, {toClassOnly : true})(target, propertyKey);
 
 		Transform((val) => {
@@ -95,10 +95,10 @@ export function ref(modelReference: ClassType<any>) {
 				return null;
 			}
 			if (targetType === Array) {
-				return val.value.map(v => classToPlain(v))
+				return val.value.map(v => instanceToPlain(v))
 			}
 
-			return classToPlain(val.value)
+			return instanceToPlain(val.value)
 		}, {toPlainOnly : true})(target, propertyKey);
 
 	};

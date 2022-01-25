@@ -35,7 +35,7 @@ export class ItemTransformGenerator {
 		contentSections.push(`export type ItemTypes = ${itemTypes.join('\n| ')};`);
 		contentSections.push(`export type ItemIdentifiers = keyof Items;`);
 
-		fs.writeFileSync(path.join(__dirname, 'ItemTypes.d.ts'), contentSections.join('\n\n'), {encoding : 'utf-8'});
+		fs.writeFileSync(path.join(__dirname, '..', 'ItemTypes.d.ts'), contentSections.join('\n\n'), {encoding : 'utf-8'});
 
 
 		const itemTypesContent = `${itemImports.join('\n')}\nexport const itemTypesTransformer = {
@@ -46,7 +46,7 @@ export class ItemTransformGenerator {
 	}
 }`;
 
-		fs.writeFileSync(path.join(__dirname, 'ItemTypeTransformerObject.ts'), itemTypesContent, {encoding : 'utf-8'});
+		fs.writeFileSync(path.join(__dirname, '..', 'ItemTypeTransformerObject.ts'), itemTypesContent, {encoding : 'utf-8'});
 	}
 
 }

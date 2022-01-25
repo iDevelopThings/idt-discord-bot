@@ -15,9 +15,7 @@ export class MysteryBoxItem extends BaseInventoryItem {
 	public color: ColorResolvable;
 	public rarity: MysteryBoxRarity;
 	public weight: number = 0;
-
-	public items: Array<[BaseInventoryItem, number]> = [
-	];
+	public items: Array<[BaseInventoryItem, number]> = [	];
 
 	public async redeem(user: User, channelId: string, addToInventory: boolean = false) {
 
