@@ -105,6 +105,10 @@ export default class Dev extends SlashCommand {
 					$set : {
 						'balances.balance'                      : NumberInput.convert(user.balances.balance, user),
 						'balances.invested'                     : NumberInput.convert(user.balances.invested, user),
+						'skills.gambling.xp'                    : NumberInput.convert(user.skills.gambling.xp, user),
+						'skills.hacking.xp'                     : NumberInput.convert(user.skills.hacking.xp, user),
+						'skills.chatting.xp'                    : NumberInput.convert(user.skills.chatting.xp, user),
+						'skills.investing.xp'                   : NumberInput.convert(user.skills.investing.xp, user),
 						'statistics.balance.mostInvested'       : NumberInput.convert(user.statistics.balance.mostInvested, user),
 						'statistics.balance.mostLostToTaxes'    : NumberInput.convert(user.statistics.balance.mostLostToTaxes, user),
 						'statistics.gambling.totals.count'      : NumberInput.convert(user.statistics.gambling.totals.count, user),
