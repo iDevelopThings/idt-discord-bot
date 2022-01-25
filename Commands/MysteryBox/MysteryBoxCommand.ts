@@ -1,3 +1,4 @@
+import {Log} from "@envuso/common";
 import {CommandContext, CommandOptionType, SlashCommand} from "slash-create";
 import {ItemIdentifiers} from "../../Handlers/Inventory/Item/ItemTypes";
 import {Item} from "../../Handlers/Inventory/Item/Manager/Item";
@@ -20,7 +21,7 @@ export default class MysteryBoxCommand extends SlashCommand {
 					options     : [
 						{
 							name        : 'box',
-							description : 'The box to give',
+							description : 'The box you want to open',
 							type        : CommandOptionType.STRING,
 							choices     : Item.itemClasses
 								.filter(i => MysteryBox.boxIds().includes(i.instance.id))
@@ -48,7 +49,13 @@ export default class MysteryBoxCommand extends SlashCommand {
 
 	private async handleBoxOpen(ctx: CommandContext) {
 		const options = ctx.options.open as { box: ItemIdentifiers };
-		const item    = Item.get(options.box);
+		Log.info(`Trying to open box: ${options.box}`);
+
+		const item = Item.get(options.box);
+
+		if (!item) {
+			return `Welp, somethings fucked.`;
+		}
 
 		const user = await User.getOrCreate(ctx.user.id);
 
@@ -56,7 +63,7 @@ export default class MysteryBoxCommand extends SlashCommand {
 			return `You don't have any ${item.name} in your inventory.`;
 		}
 
-		const invItem = user.inventoryManager().getItem(options.box);
+		const invItem = user.inventoryManager().getItem(item.id as ItemIdentifiers);
 		await invItem.redeem(user, ctx.channelID);
 
 		await user.inventoryManager().remove(options.box, 1);

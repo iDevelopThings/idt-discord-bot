@@ -1,3 +1,4 @@
+import {Log} from "@envuso/common";
 import fs from "fs";
 import path from "path";
 import {Item} from "./Item";
@@ -35,8 +36,10 @@ export class ItemTransformGenerator {
 		contentSections.push(`export type ItemTypes = ${itemTypes.join('\n| ')};`);
 		contentSections.push(`export type ItemIdentifiers = keyof Items;`);
 
-		fs.writeFileSync(path.join(__dirname, '..', 'ItemTypes.d.ts'), contentSections.join('\n\n'), {encoding : 'utf-8'});
+		const defPath = path.join(process.cwd(), 'Handlers', 'Inventory', 'Item', 'ItemTypes.d.ts');
+		fs.writeFileSync(defPath, contentSections.join('\n\n'), {encoding : 'utf-8'});
 
+		Log.info(`Writing ItemTypes.d.ts to ${defPath}`);
 
 		const itemTypesContent = `${itemImports.join('\n')}\nexport const itemTypesTransformer = {
 	keepDiscriminatorProperty : true,
@@ -44,9 +47,13 @@ export class ItemTransformGenerator {
 		property : 'id',
 		subTypes : [${itemTypesConverters.join(',\n')}]
 	}
-}`;
+};`;
 
-		fs.writeFileSync(path.join(__dirname, '..', 'ItemTypeTransformerObject.ts'), itemTypesContent, {encoding : 'utf-8'});
+		const itemTransformerPath = path.join(process.cwd(), 'Handlers', 'Inventory', 'Item', 'ItemTypeTransformerObject.ts');
+
+		Log.info(`Writing ItemTypeTransformerObject.ts to ${itemTransformerPath}`);
+
+		fs.writeFileSync(itemTransformerPath, itemTypesContent, {encoding : 'utf-8'});
 	}
 
 }

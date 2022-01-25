@@ -61,6 +61,18 @@ export class BaseInventoryItem {
 		return null;
 	}
 
+	async sendFailMessage(user: User, channelId: string, message: string) {
+		const embed = new MessageEmbed()
+			.setColor('RED')
+			.setAuthor(user.embedAuthorInfo)
+			.setTitle(`Welp it borked...`)
+			.setThumbnail(this.getImageUrl())
+			.setDescription(message);
+
+		const channel = guild().channels.cache.get(channelId) as TextChannel;
+		await channel.send({embeds : [embed]});
+	}
+
 	async sendRedeemedMessage(user: User, channelId: string, content: string) {
 		const embed = new MessageEmbed()
 			.setColor((this as any).color ?? 'BLUE')

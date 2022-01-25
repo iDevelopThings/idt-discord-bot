@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "serve": "ts-node index.ts",
+    "generate:item-defs": "ts-node GenerateItemDefs.ts",
     "testshit": "ts-node testing.ts",
     "testinventory": "ts-node inventorytesting.ts",
     "build": "tsc -b --clean && tsc -b"

@@ -11,4 +11,4 @@ export const itemTypesTransformer = {
 {name : "money", value : Money},
 {name : "rare.mystery.box", value : RareMysteryBox}]
 	}
-}
+};

@@ -1,3 +1,4 @@
+import {Log} from "@envuso/common";
 import {ColorResolvable} from "discord.js";
 import User from "../../../Models/User/User";
 import {formatMoney} from "../../../Util/Formatter";
@@ -14,8 +15,8 @@ export enum MysteryBoxRarity {
 export class MysteryBoxItem extends BaseInventoryItem {
 	public color: ColorResolvable;
 	public rarity: MysteryBoxRarity;
-	public weight: number = 0;
-	public items: Array<[BaseInventoryItem, number]> = [	];
+	public weight: number                            = 0;
+	public items: Array<[BaseInventoryItem, number]> = [];
 
 	public async redeem(user: User, channelId: string, addToInventory: boolean = false) {
 
@@ -32,12 +33,19 @@ export class MysteryBoxItem extends BaseInventoryItem {
 
 		const items   = [];
 		const weights = [];
+
 		this.items.forEach(([item, weight]) => {
 			items.push(item);
 			weights.push(weight);
 		});
 
 		const item = chance.weighted<Money>(items, weights);
+
+		if (!item) {
+			Log.info(`Chance.weighted fail...`, items, weights, item);
+			await this.sendFailMessage(user, channelId, `For some reason chance.weighted isn't returning an item, sorry bruh :c`);
+			return;
+		}
 
 		const message = (item instanceof Money)
 			? `Your box contained ${item.amount}x ${item.name}`
