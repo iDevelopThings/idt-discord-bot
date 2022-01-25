@@ -1,7 +1,7 @@
 import {Log} from "@envuso/common";
 import path from "path";
 import {GatewayServer, SlashCreator} from "slash-create";
-import {getFiles} from "slash-create/lib/util";
+import util_1, {getFiles} from "slash-create/lib/util";
 import {guildId} from "../../Util/Bot";
 import DiscordJsManager from "./DiscordJsManager";
 
@@ -44,11 +44,21 @@ export default class SlashCreatorManager {
 			DiscordJsManager.client().ws.on('INTERACTION_CREATE', handler);
 		});
 
-		console.log(path.join(process.cwd(), 'Commands'));
 
 		await this._creator.withServer(gateway);
 
-		const commands = getFiles(path.join(process.cwd(), 'Commands')).map(command => require(command));
+		const mainFilename = require.main.filename;
+
+		const requireDir = (mainFilename.includes('.js') || mainFilename.includes('/dist/'))
+			? path.join(process.cwd(), 'dist', 'Commands')
+			: path.join(process.cwd(), 'Commands');
+
+		console.log(`Requiring commands from: `, requireDir);
+
+		const commands = getFiles(requireDir)
+			.filter(f => f.endsWith('.js') || (f.endsWith('.ts') && !f.endsWith('.d.ts')))
+			.map(command => require(command));
+
 		this._creator.registerCommands(commands, true);
 
 		//		await this._creator.syncCommandsIn(guildId, true);
