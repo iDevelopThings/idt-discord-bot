@@ -18,11 +18,13 @@ export default class MysteryBoxCommand extends SlashCommand {
 					name        : 'open',
 					description : 'Open a mysterybox',
 					type        : CommandOptionType.SUB_COMMAND,
+					required    : true,
 					options     : [
 						{
 							name        : 'box',
 							description : 'The box you want to open',
 							type        : CommandOptionType.STRING,
+							required    : true,
 							choices     : Item.itemClasses
 								.filter(i => MysteryBox.boxIds().includes(i.instance.id))
 								.map(c => {

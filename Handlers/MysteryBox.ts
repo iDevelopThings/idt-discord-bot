@@ -26,7 +26,7 @@ export class MysteryBox {
 	static canReceive(user: User): [boolean, typeof MysteryBoxItem] {
 		const chance = getChanceInstance();
 
-		if (!chance.bool({likelihood : 5})) {
+		if (!chance.bool({likelihood : 2})) {
 			return [false, null];
 		}
 
