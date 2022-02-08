@@ -24,7 +24,7 @@ export default class GuildMessageSent extends BaseEventHandler<ClientEventType> 
 		}
 
 		this.giveMessagingXp(user).catch(error => Log.error(error));
-		this.giveRandomBoxIfPossible(user, message).catch(error => Log.error(error));
+		//this.giveRandomBoxIfPossible(user, message).catch(error => Log.error(error));
 
 		SentMessage.storeInfo(message).catch(error => Log.error(error));
 	}
