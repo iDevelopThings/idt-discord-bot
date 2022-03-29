@@ -21,5 +21,6 @@ export default {
 
 	spamMessageHistoryLookBack : 20,
 
-	daemonId : process.env.DAEMON_ID,
+	daemonId  : process.env.DAEMON_ID,
+	sentryDsn : process.env.SENTRY_DSN,
 };
