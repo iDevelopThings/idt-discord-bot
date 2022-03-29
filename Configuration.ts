@@ -19,5 +19,7 @@ export default {
 
 	cronJobRate : 60 * 1000,
 
-	spamMessageHistoryLookBack: 20,
+	spamMessageHistoryLookBack : 20,
+
+	daemonId : process.env.DAEMON_ID,
 };

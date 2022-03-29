@@ -1,5 +1,6 @@
 import {Log} from "@envuso/common";
 import {exec} from "child_process";
+import Configuration from "./Configuration";
 import {Item} from "./Handlers/Inventory/Item/Manager/Item";
 import {ItemTransformGenerator} from "./Handlers/Inventory/Item/Manager/ItemTransformGenerator";
 import "reflect-metadata";
@@ -28,7 +29,7 @@ const generate = async () => {
 
 	await runCmd(`yarn build`);
 	Log.success(`All done with build... restarting supervisor process.!`);
-	await runCmd(`sudo supervisorctl restart daemon-637095:daemon-637095_00`);
+	await runCmd(`sudo supervisorctl restart daemon-${Configuration.daemonId}:daemon-${Configuration.daemonId}_00`);
 };
 
 

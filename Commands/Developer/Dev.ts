@@ -4,6 +4,7 @@ import path from "path";
 import readLastLines from 'read-last-lines';
 import {CommandOptionType, SlashCommand} from "slash-create";
 import {CommandContext} from "slash-create";
+import Configuration from "../../Configuration";
 import SentMessage from "../../Models/SentMessage";
 import User from "../../Models/User/User";
 import {getChannelById, guild, guildId} from "../../Util/Bot";
@@ -166,7 +167,7 @@ export default class Dev extends SlashCommand {
 		}
 		await ctx.send('Getting them now ☑️');
 
-		const logPath = path.resolve('/home', 'forge', '.forge', 'daemon-637095.log');
+		const logPath = path.resolve('/home', 'forge', '.forge', 'daemon-'+Configuration.daemonId+'.log');
 
 		const logsData = await readLastLines.read(logPath, options.daemonlogs.lines, 'utf-8');
 
