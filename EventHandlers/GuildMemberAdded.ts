@@ -13,13 +13,13 @@ export default class GuildMemberAdded extends BaseEventHandler<ClientEventType> 
 	async handle(member: GuildMember) {
 		const user = await this.updateUserInformation(member);
 
-		const introChannel = guild().channels.cache.find(c => c.name.includes('intro_channel')) as TextChannel;
-
-		if (!introChannel) {
-			return;
-		}
-
-		await introChannel.send(`Welcome ${member.toString()}`);
+//		const introChannel = guild().channels.cache.find(c => c.name.includes('intro_channel')) as TextChannel;
+//
+//		if (!introChannel) {
+//			return;
+//		}
+//
+//		await introChannel.send(`Welcome ${member.toString()}`);
 	}
 
 	private async updateUserInformation(member: GuildMember) {
