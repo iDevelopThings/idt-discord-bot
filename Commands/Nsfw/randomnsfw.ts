@@ -1,6 +1,6 @@
 import {MessageEmbed} from "discord.js";
 import {CommandContext, SlashCommand} from "slash-create";
-import {guildId} from "../../Util/Bot";
+import {getChannel, guildId} from "../../Util/Bot";
 import axios, {AxiosResponse} from "axios";
 
 export default class RandomNsfw extends SlashCommand{
@@ -18,9 +18,10 @@ export default class RandomNsfw extends SlashCommand{
 			const subreddits: String[] = ["ass","clits","boobs","vagina"];
 			const randomSubreddit: String = subreddits[Math.floor(Math.random()*subreddits.length)];
 
-			if(ctx.channelID !== "388442930618302475") {
-				await ctx.send("Invalid Channel. Only usable in #nsfw.");
-				return
+			const nsfwChannel = getChannel('nsfw');
+
+			if(ctx.channelID !== nsfwChannel.id) {
+				return "Command is used in the wrong channel. Only usable in #nsfw.";
 			}
 
 
