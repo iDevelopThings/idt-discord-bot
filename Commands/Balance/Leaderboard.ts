@@ -142,13 +142,17 @@ export default class Leaderboard extends SlashCommand {
 			userContext.closePath();
 			userContext.clip();
 
-			const avatar = await loadImage(
-				user.avatar === null
-					? DiscordJsManager.client().user.avatarURL({format : "png"})
-					: user.avatar
-			);
-			userContext.drawImage(avatar, 10, 10, 30, 30);
-			userContext.restore();
+			try {
+				const avatar = await loadImage(
+					user.avatar === null
+						? DiscordJsManager.client().user.avatarURL({format : "png"})
+						: user.avatar
+				);
+				userContext.drawImage(avatar, 10, 10, 30, 30);
+				userContext.restore();
+			} catch(exception) {
+				console.log(exception);
+			}
 
 			userContext.save();
 			this.roundedBox(measurementsUsername.width + 60, 0, valueMeasurements.width + 20, userCanvas.height, 8, userContext);
